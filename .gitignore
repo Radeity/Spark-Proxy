@@ -1,3 +1,16 @@
+
+
+target
+.idea/
+.DS_Store
+datas/output/*
+*/.DS_Store
+HELP.md
+.mvn
+*/.mvn
+/mvn*
+*/mvn*
+
 # Compiled class file
 *.class
 
