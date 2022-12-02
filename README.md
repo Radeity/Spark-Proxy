@@ -1,8 +1,10 @@
 # Spark-Proxy
-push-based calculation for spark job by proxy
+Push-based calculation for `Spark` job via aop.
+<br><br>
 
 ## Core Code
 `src/main/java/fdu/daslab/SparkClientAspect.java`
+<br><br>
 
 ## Quick Start
 
@@ -16,7 +18,7 @@ mvn clean scala:compile compile
 
 1. Download `aspectjweaver-1.9.7.jar` from mvn repository
 
-2. Edit $SPARK_HOME/conf/spark_env.sh
+2. Edit `$SPARK_HOME/conf/spark_env.sh`
 
   ```shell
   export SPARK_SUBMIT_OPTS="-javaagent:{DOWNLOAD_JAR_PATH}/aspectjweaver-1.9.7.jar"
@@ -39,4 +41,13 @@ mvn clean scala:compile compile
 
 2. Yarn Mode
 
-  Support few days later...
+    Will support in few days 👨🏻‍💻...
+    
+<br>
+
+## Futurn Plan
+
+1. Support `yarn` mode.
+
+2. Support re-dispatch to external executor. 
+    
