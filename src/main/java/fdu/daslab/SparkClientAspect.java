@@ -1,6 +1,7 @@
 package fdu.daslab;
 
 import fdu.daslab.utils.DecodeUtils;
+import fdu.daslab.utils.RegisterUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.network.client.TransportClient;
 import org.apache.spark.resource.ResourceInformation;
@@ -35,6 +36,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static fdu.daslab.utils.RegisterUtils.executorDataMap;
+import static fdu.daslab.utils.RegisterUtils.executorIndex;
+
 /**
  * @author Aaron Wang
  * @version 1.0
@@ -44,10 +48,6 @@ import java.util.stream.Collectors;
 public class SparkClientAspect {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-
-    static HashMap<String, ExecutorEndpointRefInfo> executorDataMap = new HashMap<>();
-
-    List<String> executorIndex = new ArrayList<>();
 
     Random r = new Random();
 
@@ -92,22 +92,17 @@ public class SparkClientAspect {
             logger.info("Send Message: {}", args[0]);
             RequestMessage message = (RequestMessage) args[0];
             if (message.content().getClass() == CoarseGrainedClusterMessages.LaunchTask.class) {
-                ExecutorEndpointRefInfo newExecutorEndpointRef = null;
-                int originExecutorId = -1;
-
                 // TODO: Re-dispatch task to external executor, current way only re-dispatches task to the other executor in cluster.
-                // maintain executorEndpointRef map
                 NettyRpcEndpointRef executorEndpointRef = message.receiver();
                 RpcAddress address = executorEndpointRef.address();
                 String key = executorEndpointRef.client() != null ? String.valueOf(executorEndpointRef.client().getSocketAddress())
                         : String.format("spark://%s:%s", address.host(), address.port());
                 logger.info("key = {}, executorDataMap.size = {}", key, executorDataMap.size());
-                if (!executorDataMap.containsKey(key)) {
-                    executorIndex.add(key);
-                    executorDataMap.put(key, new ExecutorEndpointRefInfo(executorEndpointRef, executorIndex.size()));
-                }
-                newExecutorEndpointRef = executorDataMap.get(key);
-                originExecutorId = newExecutorEndpointRef.execId;
+
+                // maintain executorEndpointRef map
+                ExecutorEndpointRefInfo newExecutorEndpointRef = RegisterUtils.getExecutorEndpointRef(key, executorEndpointRef);
+
+                int originExecutorId = newExecutorEndpointRef.execId;
                 if (executorDataMap.size() > 1) {
                     // add random seed
                     r.setSeed(new Date().getTime());
