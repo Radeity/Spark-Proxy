@@ -6,6 +6,7 @@ import org.apache.spark.rpc.netty.NettyRpcEndpointRef;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Aaron Wang
@@ -14,7 +15,7 @@ import java.util.List;
  */
 public class RegisterUtils {
 
-    public static HashMap<String, ExecutorEndpointRefInfo> executorDataMap = new HashMap<>();
+    public static Map<String, ExecutorEndpointRefInfo> executorDataMap = new HashMap<>();
 
     public static List<String> executorIndex = new ArrayList<>();
 

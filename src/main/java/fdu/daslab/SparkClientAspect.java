@@ -8,9 +8,7 @@ import org.apache.spark.resource.ResourceInformation;
 import org.apache.spark.rpc.RpcAddress;
 import org.apache.spark.rpc.RpcCallContext;
 import org.apache.spark.rpc.RpcEndpointAddress;
-import org.apache.spark.rpc.netty.NettyRpcEndpointRef;
-import org.apache.spark.rpc.netty.NettyRpcEnv;
-import org.apache.spark.rpc.netty.RequestMessage;
+import org.apache.spark.rpc.netty.*;
 import org.apache.spark.scheduler.TaskDescription;
 import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessage;
 import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages;
@@ -88,8 +86,9 @@ public class SparkClientAspect {
             "within(org.apache.spark.rpc.netty..*) && !within(SparkClientAspect)")
     public Object send(ProceedingJoinPoint point) throws Throwable {
         Object[] args = point.getArgs();
+//        logger.info("############ Sending Request");
+        logger.info("########## Send Message: {}", args[0]);
         if (args != null && args.length > 0 && args[0].getClass() == RequestMessage.class) {
-            logger.info("Send Message: {}", args[0]);
             RequestMessage message = (RequestMessage) args[0];
             if (message.content().getClass() == CoarseGrainedClusterMessages.LaunchTask.class) {
                 // TODO: Re-dispatch task to external executor, current way only re-dispatches task to the other executor in cluster.
@@ -102,11 +101,12 @@ public class SparkClientAspect {
                 // maintain executorEndpointRef map
                 ExecutorEndpointRefInfo newExecutorEndpointRef = RegisterUtils.getExecutorEndpointRef(key, executorEndpointRef);
 
-                int originExecutorId = newExecutorEndpointRef.execId;
+                String originExecutorId = newExecutorEndpointRef.toString();
                 if (executorDataMap.size() > 1) {
                     // add random seed
                     r.setSeed(new Date().getTime());
-                    int i = r.nextInt(executorDataMap.size() - 1);;
+                    int i = r.nextInt(executorDataMap.size() - 1);
+                    ;
                     while (executorIndex.get(i).equals(key)) {
                         i = r.nextInt(executorDataMap.size() - 1);
                     }
@@ -126,9 +126,22 @@ public class SparkClientAspect {
                     RequestMessage newMessage = new RequestMessage(message.senderAddress(), newExecutorEndpointRef.executorEndpointRef, message.content());
                     args[0] = newMessage;
                     logger.info(". . . . . . . . . Redispatching Task{}, Executor:{}, Partition:{}, JAR size:{}, Archive size:{}",
-                            decode.taskId(), newExecutorEndpointRef.execId, decode.partitionId(), decode.addedJars().size(), decode.addedFiles().size());
+                            decode.taskId(), newExecutorEndpointRef, decode.partitionId(), decode.addedJars().size(), decode.addedFiles().size());
                 }
             }
+        }
+        return point.proceed(args);
+    }
+
+    @Around("execution(* org.apache.spark.rpc.netty.Inbox.post(..)) && within(org.apache.spark.rpc.netty..*) && !within(SparkClientAspect)")
+    public Object receiveMessage(ProceedingJoinPoint point) throws Throwable {
+        Object[] args = point.getArgs();
+        if (args != null && args.length > 0) {
+             if(args[0].getClass() == OneWayMessage.class) {
+                 logger.info("^^^^^^^ Receive One Way Message: {}", args[0]);
+             } else if (args[0].getClass() == RpcMessage.class) {
+                 logger.info("^^^^^^^ Receive RPC Message: {}", args[0]);
+             }
         }
         return point.proceed(args);
     }

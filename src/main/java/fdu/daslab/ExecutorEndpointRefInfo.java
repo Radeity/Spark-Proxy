@@ -17,4 +17,9 @@ public class ExecutorEndpointRefInfo implements Serializable {
         this.executorEndpointRef = executorEndpointRef;
         this.execId = execId;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%d-%s", execId, executorEndpointRef.client().getSocketAddress());
+    }
 }
