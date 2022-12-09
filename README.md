@@ -2,8 +2,15 @@
 Push-based calculation for `Spark` job via aop.
 <br><br>
 
-## Core Code
-`src/main/java/fdu/daslab/SparkClientAspect.java`
+## Code Structure
+
+**Aop**
+
+`demo/src/main/java/fdu/daslab/SparkClientAspect.java`
+
+**Mock Remote Worker**
+
+`MocWorker/src/main/java/fdu/daslab/Worker.java`
 <br><br>
 
 ## Quick Start
@@ -13,6 +20,7 @@ Push-based calculation for `Spark` job via aop.
 ```shell
 mvn clean scala:compile compile
 ```
+<br>
 
 **Add Spark configuration to support aop:**
 
@@ -27,9 +35,12 @@ mvn clean scala:compile compile
 3. Move aop jar to spark resource path:
 
   ```shell
-  mv target/Aop2YarnClient-1.0-SNAPSHOT.jar $SPARK_HOME/jars
+  mv common/target/common-1.0-SNAPSHOT.jar $SPARK_HOME/jars
+  mv demo/target/demo-1.0-SNAPSHOT.jar $SPARK_HOME/jars
+  mv jedis-4.3.1.jar (Download from https://repo1.maven.org/maven2/redis/clients/jedis/4.3.1/jedis-4.3.1.jar) $SPARK_HOME/jars
   ```
 
+<br>
 
 **Submit application:**
 
