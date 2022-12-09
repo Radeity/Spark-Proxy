@@ -8,7 +8,7 @@ package fdu.daslab.utils;
 public class CommandUtils {
 
     // TODO: Fetch command automatically
-    public static String fetchCommand() {
+    public static String fetchCommandTemplate() {
         return "";
     }
 }

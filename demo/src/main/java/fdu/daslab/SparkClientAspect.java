@@ -1,39 +1,35 @@
 package fdu.daslab;
 
-import fdu.daslab.utils.DecodeUtils;
+import fdu.daslab.registry.RedisRegistry;
 import fdu.daslab.utils.RegisterUtils;
-import org.apache.spark.SparkConf;
+import org.apache.spark.deploy.ApplicationDescription;
+import org.apache.spark.deploy.Command;
+import org.apache.spark.deploy.DeployMessages;
+import org.apache.spark.deploy.worker.ExecutorRunner;
 import org.apache.spark.network.client.TransportClient;
-import org.apache.spark.resource.ResourceInformation;
 import org.apache.spark.rpc.RpcAddress;
-import org.apache.spark.rpc.RpcCallContext;
-import org.apache.spark.rpc.RpcEndpointAddress;
 import org.apache.spark.rpc.netty.*;
 import org.apache.spark.scheduler.TaskDescription;
-import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessage;
-import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages;
-import org.apache.spark.scheduler.cluster.CoarseGrainedSchedulerBackend;
-import org.apache.spark.scheduler.cluster.ExecutorData;
-import org.apache.spark.util.ByteBufferInputStream;
+import org.apache.spark.scheduler.cluster.*;
 import org.apache.spark.util.SerializableBuffer;
+import org.apache.spark.util.Utils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.collection.mutable.ArrayBuffer;
+import redis.clients.jedis.Jedis;
+import scala.collection.JavaConverters;
+import scala.collection.Seq;
 
-import java.io.DataInputStream;
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static fdu.daslab.constants.Constants.*;
 import static fdu.daslab.utils.RegisterUtils.executorDataMap;
 import static fdu.daslab.utils.RegisterUtils.executorIndex;
 
@@ -46,6 +42,8 @@ import static fdu.daslab.utils.RegisterUtils.executorIndex;
 public class SparkClientAspect {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private boolean fetchDriverURLFlag = false;
 
     Random r = new Random();
 
@@ -84,14 +82,22 @@ public class SparkClientAspect {
 //            "&& within(within(org.apache.spark..*)) && execution(* org.apache.spark.rpc.netty.NettyRpcEndpointRef.send(..)))")
     @Around("execution(* org.apache.spark.rpc.netty.NettyRpcEnv.send(..)) && " +
             "within(org.apache.spark.rpc.netty..*) && !within(SparkClientAspect)")
-    public Object send(ProceedingJoinPoint point) throws Throwable {
+    public Object sendMessage(ProceedingJoinPoint point) throws Throwable {
         Object[] args = point.getArgs();
 //        logger.info("############ Sending Request");
         logger.info("########## Send Message: {}", args[0]);
+        // TODO: Use design pattern to tidy up the following code
         if (args != null && args.length > 0 && args[0].getClass() == RequestMessage.class) {
             RequestMessage message = (RequestMessage) args[0];
-            if (message.content().getClass() == CoarseGrainedClusterMessages.LaunchTask.class) {
-                // TODO: Re-dispatch task to external executor, current way only re-dispatches task to the other executor in cluster.
+            // acquire driver url
+            if (!fetchDriverURLFlag && message.content().getClass() == DeployMessages.RegisterApplication.class) {
+                String driverURL = driverURLPrefix + message.senderAddress().toString();
+                Jedis redisClient = RedisRegistry.getRedisClientInstance();
+                redisClient.set(driverURLKey, driverURL);
+                // TODO: useless
+                fetchDriverURLFlag = true;
+            }
+            else if (message.content().getClass() == CoarseGrainedClusterMessages.LaunchTask.class) {
                 NettyRpcEndpointRef executorEndpointRef = message.receiver();
                 RpcAddress address = executorEndpointRef.address();
                 String key = executorEndpointRef.client() != null ? String.valueOf(executorEndpointRef.client().getSocketAddress())
@@ -106,7 +112,6 @@ public class SparkClientAspect {
                     // add random seed
                     r.setSeed(new Date().getTime());
                     int i = r.nextInt(executorDataMap.size() - 1);
-                    ;
                     while (executorIndex.get(i).equals(key)) {
                         i = r.nextInt(executorDataMap.size() - 1);
                     }
@@ -133,18 +138,60 @@ public class SparkClientAspect {
         return point.proceed(args);
     }
 
+    @Around("execution(* org.apache.spark.rpc.netty.Dispatcher.postOneWayMessage(..)) && " +
+            "within(org.apache.spark.rpc.netty..*) && !within(SparkClientAspect)")
+    public Object nettyReceiveMessage(ProceedingJoinPoint point) throws Throwable {
+        Object[] args = point.getArgs();
+        if (args != null && args.length > 0) {
+            logger.info("^^^^^^^ Receive Message: {}", args[0]);
+        }
+        return point.proceed(args);
+    }
+
+    // deprecated
     @Around("execution(* org.apache.spark.rpc.netty.Inbox.post(..)) && within(org.apache.spark.rpc.netty..*) && !within(SparkClientAspect)")
     public Object receiveMessage(ProceedingJoinPoint point) throws Throwable {
         Object[] args = point.getArgs();
         if (args != null && args.length > 0) {
              if(args[0].getClass() == OneWayMessage.class) {
                  logger.info("^^^^^^^ Receive One Way Message: {}", args[0]);
+                 OneWayMessage message = (OneWayMessage)(args[0]);
+                 // acquire worker url
+                 if (message.content().getClass() == DeployMessages.ExecutorAdded.class) {
+                     DeployMessages.ExecutorAdded content = (DeployMessages.ExecutorAdded) (message.content());
+                     String workerURL = workerURLPrefix + content.hostPort();
+                     Jedis redisClient = RedisRegistry.getRedisClientInstance();
+                     redisClient.set(workerURLKey + content.id(), workerURL);
+                 }
+//                 else if (message.content().getClass() == DeployMessages.LaunchExecutor.class) {
+//                     DeployMessages.LaunchExecutor launchExecutorMsg = (DeployMessages.LaunchExecutor) message.content();
+//                     Inbox target = (Inbox)point.getTarget();
+//                     Worker worker = (Worker) (target.endpoint());
+//                 }
              } else if (args[0].getClass() == RpcMessage.class) {
                  logger.info("^^^^^^^ Receive RPC Message: {}", args[0]);
              }
         }
         return point.proceed(args);
     }
+
+    @Around("execution(* org.apache.spark.deploy.worker.ExecutorRunner.start(..)) && within(org.apache.spark.deploy..*) && !within(SparkClientAspect)")
+    public Object runExecutor (ProceedingJoinPoint point) throws Throwable {
+        ExecutorRunner target = (ExecutorRunner) (point.getTarget());
+        logger.info("(((((((((((((((((((((((((((((((((((((   Run Executor   ))))))))))))))))))))))))))))))))");
+        ApplicationDescription appDesc = target.appDesc();
+        Seq<String> arguments = appDesc.command().arguments();
+        List<String> optList = (List<String>) appDesc.command().javaOpts().seq();
+        optList = optList.stream().map(opt -> Utils.substituteAppNExecIds(opt, target.appId(), Integer.toString(target.execId())))
+                .collect(Collectors.toList());
+        Seq<String> subsOpts = JavaConverters.asScalaIteratorConverter(optList.iterator()).asScala().toSeq();
+        Command command = appDesc.command();
+        Command subsCommand = command.copy(command.mainClass(), arguments, command.environment(), command.classPathEntries(), command.libraryPathEntries(), subsOpts);
+//        CommandUtils.buildProcessBuilder(subsCommand, new SparkConf(), target.memory(), target.sparkHome().getAbsolutePath());
+        // It's toooooooooooooooo hard ...
+        return point.proceed(point.getArgs());
+    }
+
 
 //    @Before("execution(* org.apache.spark.scheduler.cluster.CoarseGrainedSchedulerBackend.DriverEndpoint.receiveAndReply(..)) &&" +
 //            "within(org.apache.spark.scheduler.cluster..*)")

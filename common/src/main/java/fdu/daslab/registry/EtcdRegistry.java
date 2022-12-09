@@ -6,4 +6,5 @@ package fdu.daslab.registry;
  * @date 2022/12/6 1:44 PM
  */
 public class EtcdRegistry {
+
 }

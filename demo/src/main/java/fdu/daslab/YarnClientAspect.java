@@ -1,4 +1,4 @@
-//package fdu.daslab;
+package fdu.daslab;//package fdu.daslab;
 //
 //import org.apache.hadoop.yarn.api.records.ApplicationId;
 //import org.apache.hadoop.yarn.api.records.ApplicationReport;
