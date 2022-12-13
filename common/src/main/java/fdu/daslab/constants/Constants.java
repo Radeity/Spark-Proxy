@@ -14,4 +14,15 @@ public class Constants {
     public static final String workerURLPrefix = "spark://Worker@";
 
     public static final String workerURLKey = "worker-";
+
+    public static final String executorSystemName = "sparkExecutor";
+
+    public static final String driverAddress = "10.176.24.55";
+
+    public static final String executorEndpointRefKey = "executor-%s";
+
+    public static final String rescheduleStrategy = "reschedule.dst.executor";
+
+    public static final String COMMON_PROPERTIES_PATH = "/common.properties";
+
 }

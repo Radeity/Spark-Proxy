@@ -4,8 +4,7 @@ import org.apache.spark.resource.ResourceInformation;
 import org.apache.spark.scheduler.TaskDescription;
 import org.apache.spark.util.ByteBufferInputStream;
 
-import java.io.DataInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -15,10 +14,26 @@ import java.util.*;
  * @version 1.0
  * @date 2022/12/2 1:21 PM
  */
-public class DecodeUtils {
+public class SerializeUtils {
 
-    private DecodeUtils() {
-        throw new IllegalStateException("DecodeUtils class");
+    private SerializeUtils() {
+        throw new IllegalStateException("SerializeUtils class");
+    }
+
+    public static byte[] serialize(Object source) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(source);
+        byte[] bytes = bos.toByteArray();
+        bos.close();
+        oos.close();
+        return bytes;
+    }
+
+    public static Object deserialize(byte[] target) throws IOException, ClassNotFoundException {
+        ByteArrayInputStream bis = new ByteArrayInputStream(target);
+        ObjectInputStream ois = new ObjectInputStream(bis);
+        return ois.readObject();
     }
 
     public static TaskDescription decode(ByteBuffer byteBuffer) throws IOException {
@@ -56,7 +71,7 @@ public class DecodeUtils {
             // Create a sub-buffer for the serialized task into its own buffer (to be deserialized later).
             ByteBuffer serializedTask = byteBuffer.slice();
             return new TaskDescription(taskId, attemptNumber, executorId, name, index, partitionId, (scala.collection.mutable.Map<String, Object>) taskFiles,
-                    (scala.collection.mutable.Map<String, Object>)taskJars, (scala.collection.mutable.Map<String, Object>)taskArchives, properties,
+                    (scala.collection.mutable.Map<String, Object>) taskJars, (scala.collection.mutable.Map<String, Object>) taskArchives, properties,
                     (scala.collection.immutable.Map<String, ResourceInformation>) resources, serializedTask);
         } finally {
             dataIn.close();

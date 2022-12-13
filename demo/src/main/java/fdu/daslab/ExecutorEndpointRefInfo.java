@@ -11,15 +11,18 @@ import java.io.Serializable;
  */
 public class ExecutorEndpointRefInfo implements Serializable {
     NettyRpcEndpointRef executorEndpointRef;
-    int execId;
+    String execId;
 
-    public ExecutorEndpointRefInfo(NettyRpcEndpointRef executorEndpointRef, int execId) {
+    public ExecutorEndpointRefInfo(NettyRpcEndpointRef executorEndpointRef, String execId) {
         this.executorEndpointRef = executorEndpointRef;
         this.execId = execId;
     }
 
     @Override
     public String toString() {
-        return String.format("%d-%s", execId, executorEndpointRef.client().getSocketAddress());
+        if (executorEndpointRef.client() == null) {
+            return String.format("%s-%s", execId, executorEndpointRef.toString());
+        }
+        return String.format("%s-%s", execId, executorEndpointRef.client().getSocketAddress());
     }
 }

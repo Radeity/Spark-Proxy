@@ -3,6 +3,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
 
+import java.util.HashMap;
+import java.util.Random;
+
 import static fdu.daslab.constants.Constants.driverURLKey;
 
 /**
@@ -16,10 +19,9 @@ public class RedisClientTest {
     @Test
     public void redisClientTest() {
         Jedis redisClient = RedisRegistry.getRedisClientInstance();
-        System.out.println(redisClient.get(driverURLKey));
         redisClient.set(driverURLKey, driverURL);
         String val = redisClient.get(driverURLKey);
 
-        Assert.assertTrue("Redis connect failure!", val.equals(driverURL));
+        Assert.assertNotNull("Redis connect failure!", val);
     }
 }
