@@ -40,11 +40,19 @@ mvn clean scala:compile compile
   mv jedis-4.3.1.jar (Download from https://repo1.maven.org/maven2/redis/clients/jedis/4.3.1/jedis-4.3.1.jar) $SPARK_HOME/jars
   ```
 
+4. Move `demo/src/main/resources/common.properties` to Spark conf directory. 
+
 <br>
 
 **Submit application:**
 
 1. Standalone Mode
+
+  - Configure `reschedule.dst.executor` in `common.properties` which decides re-scheduler to internal or external executors.
+
+  - Launch worker first
+
+  - Submit Spark application
 
   ```shell
   spark-submit --class org.apache.spark.examples.SparkPi --master spark://analysis-5:7077 $SPARK_HOME/examples/jars/spark-examples_2.12-3.1.2.jar 10
@@ -58,7 +66,19 @@ mvn clean scala:compile compile
 
 ## Futurn Plan
 
-1. Support `yarn` mode.
+1. Validate correctness in shuffle task.
 
-2. Support re-dispatch to external executor. 
+2. Synchronize re-dispatch info with Driver.
+
+3. Support task graph generation.
+
+4. Support whole life cycle management of external executor (start, stop, listening).
+
+5. Support `IndirectTaskResult`.
+
+6. Support metrics report.
+
+7. Support Yarn mode. 
+
+
     
