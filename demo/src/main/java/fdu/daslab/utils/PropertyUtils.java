@@ -27,9 +27,7 @@ public class PropertyUtils {
                 try (InputStream fis = PropertyUtils.class.getResourceAsStream(fileName);) {
                     Properties subProperties = new Properties();
                     subProperties.load(fis);
-                    subProperties.forEach((k, v) -> {
-                        logger.debug("Get property {} -> {}", k, v);
-                    });
+                    subProperties.forEach((k, v) -> logger.info("Get property {} -> {}", k, v));
                     properties.putAll(subProperties);
                 } catch (IOException e) {
                     logger.error(e.getMessage(), e);

@@ -5,7 +5,6 @@ import org.apache.spark.SecurityManager;
 import org.apache.spark.SparkConf;
 import org.apache.spark.rpc.RpcEnv;
 
-import static fdu.daslab.constants.Constants.driverAddress;
 import static fdu.daslab.constants.Constants.executorSystemName;
 
 /**

@@ -26,13 +26,20 @@ mvn clean scala:compile compile
 
 1. Download `aspectjweaver-1.9.7.jar` from mvn repository
 
-2. Edit `$SPARK_HOME/conf/spark_env.sh`
+2. Edit `$SPARK_HOME/conf/spark_env.sh` (Standalone Mode)
 
   ```shell
   export SPARK_SUBMIT_OPTS="-javaagent:{DOWNLOAD_JAR_PATH}/aspectjweaver-1.9.7.jar"
   ```
 
-3. Move aop jar to spark resource path:
+3. Edit `$SPARK_HOME/conf/spark_default.conf` (Yarn Mode)
+
+   ```shell
+   spark.executor.extraJavaOptions  "-javaagent:{DOWNLOAD_JAR_PATH}/aspectjweaver-1.9.7.jar"
+   spark.driver.extraJavaOptions    "-javaagent:{DOWNLOAD_JAR_PATH}/aspectjweaver-1.9.7.jar"
+   ```
+
+4. Move aop jar to spark resource path:
 
   ```shell
   mv common/target/common-1.0-SNAPSHOT.jar $SPARK_HOME/jars
@@ -40,13 +47,13 @@ mvn clean scala:compile compile
   mv jedis-4.3.1.jar (Download from https://repo1.maven.org/maven2/redis/clients/jedis/4.3.1/jedis-4.3.1.jar) $SPARK_HOME/jars
   ```
 
-4. Move `demo/src/main/resources/common.properties` to Spark conf directory. 
+5. Move `demo/src/main/resources/common.properties` to Spark conf directory. 
 
 <br>
 
 **Submit application:**
 
-1. Standalone Mode
+1. Standalone Mode (Start worker first)
 
   - Configure `reschedule.dst.executor` in `common.properties` which decides re-scheduler to internal or external executors.
 
@@ -60,7 +67,7 @@ mvn clean scala:compile compile
 
 2. Yarn Mode
 
-    Will support in few days 👨🏻‍💻...
+    Basically done, can not dynamically synchronize configuration in `common.properties`. 
     
 <br>
 
@@ -77,8 +84,5 @@ mvn clean scala:compile compile
 5. Support `IndirectTaskResult`.
 
 6. Support metrics report.
-
-7. Support Yarn mode. 
-
 
     

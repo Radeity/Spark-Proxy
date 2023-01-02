@@ -106,7 +106,8 @@ public class SparkClientAspect {
         if (args != null && args.length > 0 && args[0].getClass() == RequestMessage.class) {
             RequestMessage message = (RequestMessage) args[0];
             // acquire driver url
-            if (!fetchDriverURLFlag && message.content().getClass() == DeployMessages.RegisterApplication.class) {
+            if (!fetchDriverURLFlag && (message.content().getClass() == DeployMessages.RegisterApplication.class ||
+                    message.content().getClass() == CoarseGrainedClusterMessages.RegisterClusterManager.class)) {
                 String driverURL = driverURLPrefix + message.senderAddress().toString();
                 Jedis redisClient = RedisRegistry.getRedisClientInstance();
                 redisClient.set(driverURLKey, driverURL);
@@ -133,8 +134,8 @@ public class SparkClientAspect {
                 if (newExecutorEndpointRef != null) {
                     RequestMessage newMessage = new RequestMessage(message.senderAddress(), newExecutorEndpointRef.executorEndpointRef, message.content());
                     args[0] = newMessage;
-                    logger.info(". . . . . . . . . Redispatching Task{}, Executor:{}, Partition:{}, JAR size:{}, Archive size:{}",
-                            decode.taskId(), newExecutorEndpointRef, decode.partitionId(), decode.addedJars().size(), decode.addedFiles().size());
+                    logger.info(". . . . . . . . . Redispatching Task{}, Schedule Strategy: {}, Executor:{}, Partition:{}, JAR size:{}, Archive size:{}",
+                            decode.taskId(), inClusterFlag, newExecutorEndpointRef, decode.partitionId(), decode.addedJars().size(), decode.addedFiles().size());
                 }
             }
         }
