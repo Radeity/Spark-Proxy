@@ -2,23 +2,28 @@ package fdu.daslab;
 
 import fdu.daslab.registry.RedisRegistry;
 import org.apache.spark.Receiver;
-import org.apache.spark.SecurityManager;
 import org.apache.spark.SparkConf;
 import org.apache.spark.resource.ResourceInformation;
 import org.apache.spark.rpc.*;
-import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages;
+import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.RegisterExecutor;
+import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.RetrieveSparkAppConfig;
+import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.SparkAppConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import scala.PartialFunction;
+import scala.Tuple2;
+import scala.collection.immutable.HashMap;
 import scala.collection.immutable.Map;
-import scala.reflect.ClassTag;
+import scala.reflect.ClassTag$;
 import scala.runtime.BoxedUnit;
 
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static fdu.daslab.constants.Constants.driverAddress;
+import static fdu.daslab.MocWorkerConstants.DEFAULT_EXECUTOR_ID;
+import static fdu.daslab.MocWorkerConstants.EXECUTOR;
 import static fdu.daslab.constants.Constants.driverURLKey;
 
 /**
@@ -30,16 +35,17 @@ public class MocExecutorEndpoint implements IsolatedRpcEndpoint {
 
     protected static final Logger logger = LoggerFactory.getLogger(MocExecutorEndpoint.class);
 
-    public static final String executorId = "16";
-
     public RpcEnv rpcEnv;
+
+    public SparkConf conf;
 
     public Receiver receiver;
 
     public RpcEndpointRef driver;
 
-    public MocExecutorEndpoint(RpcEnv rpcEnv) {
+    public MocExecutorEndpoint(RpcEnv rpcEnv, SparkConf conf) {
         this.rpcEnv = rpcEnv;
+        this.conf = conf;
     }
 
     @Override
@@ -64,22 +70,36 @@ public class MocExecutorEndpoint implements IsolatedRpcEndpoint {
         while (driver == null && nTries < 3) {
             try {
                 driver = rpcEnv().setupEndpointRefByURI(driverURL);
-                logger.info("MockWorker connecting to driver {} ...", driver);
+                logger.info("MockWorker connect to driver {} ...", driver);
             } catch (Throwable e) {
                 if (nTries == 2) throw e;
             }
-            nTries ++;
+            nTries++;
         }
+
+        logger.info("MockWorker retrieve Spark app Config ...");
+        SparkAppConfig cfg = driver.askSync(new RetrieveSparkAppConfig(0), ClassTag$.MODULE$.apply(SparkAppConfig.class));
+        // TODO: set arguments.appId
+        List<Tuple2<String, String>> props = (List<Tuple2<String, String>>) cfg.sparkProperties().seq();
+        props.forEach(prop -> {
+            logger.info("Set executor conf : {} = {}", prop._1, prop._2);
+            // this is required for SSL in standalone mode
+            if (SparkConf.isExecutorStartupConf(prop._1)) {
+                conf.setIfMissing(prop._1, prop._2);
+            } else {
+                conf.set(prop._1, prop._2);
+            }
+        });
+        conf.set(EXECUTOR, DEFAULT_EXECUTOR_ID);
+
         logger.info("Driver address: {}", driver.address());
 
-        ClassTag tag = scala.reflect.ClassTag$.MODULE$.apply(Boolean.class);
+        Map<String, String> emptyMap = new HashMap<>();
+        Map<String, ResourceInformation> emptyResourceInformationMap = new HashMap<>();
 
-        Map<String, String> emptyMap = new scala.collection.immutable.HashMap<>();
-        Map<String, ResourceInformation> emptyResourceInformationMap = new scala.collection.immutable.HashMap<>();
+        driver.ask(new RegisterExecutor(DEFAULT_EXECUTOR_ID, self(), "null", 1, emptyMap, emptyMap, emptyResourceInformationMap, 0), ClassTag$.MODULE$.apply(Boolean.class));
 
-        driver.ask(new CoarseGrainedClusterMessages.RegisterExecutor(executorId, self(), "null", 1, emptyMap, emptyMap, emptyResourceInformationMap, 0), tag);
-
-        receiver = new Receiver(driver);
+        receiver = new Receiver(driver, conf);
     }
 
     @Override

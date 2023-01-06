@@ -48,9 +48,9 @@ public class WorkerTest {
                 0,
                 false);
 
-        MocExecutorEndpoint mocWorkerEndpoint = new MocExecutorEndpoint(executorRpcEnv);
+        MocExecutorEndpoint mocWorkerEndpoint = new MocExecutorEndpoint(executorRpcEnv, executorConf);
 
-        mocWorkerEndpoint.receiver = new Receiver(null);
+        mocWorkerEndpoint.receiver = new Receiver(null, executorConf);
         executorRpcEnv.setupEndpoint("Executor", mocWorkerEndpoint);
         Thread.sleep(1000);
         Jedis redisClient = RedisRegistry.getRedisClientInstance();

@@ -14,11 +14,14 @@ import static fdu.daslab.constants.Constants.executorSystemName;
  */
 public class Worker {
 
-    public static void main(String[] args) throws InterruptedException {
+//    private static final String SERIALIZER_OBJECT_STREAM_RESET = "spark.serializer.objectStreamReset";
+//    private static final String SERIALIZER_EXTRA_DEBUG_INFO = "spark.serializer.extraDebugInfo";
+
+    public static void main(String[] args) {
         run();
     }
 
-    public static void run() throws InterruptedException {
+    public static void run() {
         SparkConf executorConf = new SparkConf();
 
         String bindAddress = IpUtils.fetchLANIp();
@@ -34,7 +37,7 @@ public class Worker {
 
         System.out.println(executorRpcEnv.address());
 
-        MocExecutorEndpoint mocWorkerEndpoint = new MocExecutorEndpoint(executorRpcEnv);
+        MocExecutorEndpoint mocWorkerEndpoint = new MocExecutorEndpoint(executorRpcEnv, executorConf);
 
         executorRpcEnv.setupEndpoint("Executor", mocWorkerEndpoint);
 

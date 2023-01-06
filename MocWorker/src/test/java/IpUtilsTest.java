@@ -9,7 +9,6 @@ import org.junit.Test;
  */
 public class IpUtilsTest {
 
-
     @Test
     public void testFetchPublicIp() {
         String ip = IpUtils.fetchPublicIp();
