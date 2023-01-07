@@ -14,17 +14,14 @@ import static fdu.daslab.constants.Constants.executorSystemName;
  */
 public class Worker {
 
-//    private static final String SERIALIZER_OBJECT_STREAM_RESET = "spark.serializer.objectStreamReset";
-//    private static final String SERIALIZER_EXTRA_DEBUG_INFO = "spark.serializer.extraDebugInfo";
-
     public static void main(String[] args) {
         run();
     }
 
+    public static String bindAddress = IpUtils.fetchLANIp();
+
     public static void run() {
         SparkConf executorConf = new SparkConf();
-
-        String bindAddress = IpUtils.fetchLANIp();
 
         RpcEnv executorRpcEnv = RpcEnv.create(executorSystemName,
                 bindAddress,

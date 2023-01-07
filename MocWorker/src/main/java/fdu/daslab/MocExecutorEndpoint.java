@@ -13,12 +13,12 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import scala.PartialFunction;
 import scala.Tuple2;
+import scala.collection.Seq;
 import scala.collection.immutable.HashMap;
 import scala.collection.immutable.Map;
 import scala.reflect.ClassTag$;
 import scala.runtime.BoxedUnit;
 
-import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -79,16 +79,15 @@ public class MocExecutorEndpoint implements IsolatedRpcEndpoint {
 
         logger.info("MockWorker retrieve Spark app Config ...");
         SparkAppConfig cfg = driver.askSync(new RetrieveSparkAppConfig(0), ClassTag$.MODULE$.apply(SparkAppConfig.class));
-        // TODO: set arguments.appId
-        List<Tuple2<String, String>> props = (List<Tuple2<String, String>>) cfg.sparkProperties().seq();
-        props.forEach(prop -> {
+        Seq<Tuple2<String, String>> props = cfg.sparkProperties();
+        props.foreach(prop -> {
             logger.info("Set executor conf : {} = {}", prop._1, prop._2);
-            // this is required for SSL in standalone mode
             if (SparkConf.isExecutorStartupConf(prop._1)) {
                 conf.setIfMissing(prop._1, prop._2);
             } else {
                 conf.set(prop._1, prop._2);
             }
+            return prop;
         });
         conf.set(EXECUTOR, DEFAULT_EXECUTOR_ID);
 
@@ -97,9 +96,9 @@ public class MocExecutorEndpoint implements IsolatedRpcEndpoint {
         Map<String, String> emptyMap = new HashMap<>();
         Map<String, ResourceInformation> emptyResourceInformationMap = new HashMap<>();
 
-        driver.ask(new RegisterExecutor(DEFAULT_EXECUTOR_ID, self(), "null", 1, emptyMap, emptyMap, emptyResourceInformationMap, 0), ClassTag$.MODULE$.apply(Boolean.class));
+        driver.ask(new RegisterExecutor(DEFAULT_EXECUTOR_ID, self(), Worker.bindAddress, 1, emptyMap, emptyMap, emptyResourceInformationMap, 0), ClassTag$.MODULE$.apply(Boolean.class));
 
-        receiver = new Receiver(driver, conf);
+        receiver = new Receiver(driver, conf, cfg);
     }
 
     @Override

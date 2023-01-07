@@ -50,7 +50,7 @@ public class WorkerTest {
 
         MocExecutorEndpoint mocWorkerEndpoint = new MocExecutorEndpoint(executorRpcEnv, executorConf);
 
-        mocWorkerEndpoint.receiver = new Receiver(null, executorConf);
+        mocWorkerEndpoint.receiver = new Receiver(null, executorConf, null);
         executorRpcEnv.setupEndpoint("Executor", mocWorkerEndpoint);
         Thread.sleep(1000);
         Jedis redisClient = RedisRegistry.getRedisClientInstance();
@@ -62,4 +62,29 @@ public class WorkerTest {
         String stdoutContent = stdoutStream.toString();
         Assert.assertTrue("Receiver is ineffective!", stdoutContent.contains("No matching receiver!"));
     }
+
+    class A {
+        public int id;
+        public A(int id) {
+            this.id = id;
+        }
+    }
+
+    class B extends A {
+        public String no;
+
+        public B(int id, String no) {
+            super(id);
+            this.no = no;
+        }
+    }
+
+    @Test
+    public void testCast() {
+        B b = new B(1, "sss");
+        A a = (A) b;
+        System.out.println(a.id);
+
+    }
+
 }

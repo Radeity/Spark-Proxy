@@ -57,6 +57,8 @@ mvn clean scala:compile compile
 
   - Configure `reschedule.dst.executor` in `common.properties` which decides re-scheduler to internal or external executors.
 
+  - Replace `jarDir` in `TaskRunner` with example JAR path in external executor (will support auto-fetching later).
+
   - Launch worker first
 
   - Submit Spark application
@@ -73,16 +75,18 @@ mvn clean scala:compile compile
 
 ## Futurn Plan
 
-1. Validate correctness in shuffle task.
+1. Support auto-fetching JAR files. 
 
-2. Synchronize re-dispatch info with Driver.
+2. Validate correctness in shuffle task.
 
-3. Support task graph generation.
+3. Synchronize re-dispatch info with Driver.
 
-4. Support whole life cycle management of external executor (start, stop, listening).
+4. Support task graph generation.
 
-5. Support `IndirectTaskResult`.
+5. Support whole life cycle management of external executor (start, stop, listening).
 
-6. Support metrics report.
+6. Support `IndirectTaskResult`.
+
+7. Support metrics report.
 
     

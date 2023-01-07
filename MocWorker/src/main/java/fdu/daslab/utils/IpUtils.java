@@ -31,8 +31,10 @@ public class IpUtils {
                 while (address.hasMoreElements()) {
                     InetAddress addr = address.nextElement();
                     if (addr instanceof Inet4Address) {
-                        if (nif.getName().equals("en0")) {
-                            return addr.getHostAddress();
+                        if (nif.getName().equals("en0") || nif.getName().equals("eno1")) {
+                            String hostAddress = addr.getHostAddress();
+                            System.out.println(hostAddress);
+                            return hostAddress;
                         }
                     }
                 }
