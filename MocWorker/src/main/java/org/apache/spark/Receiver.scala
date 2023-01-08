@@ -2,6 +2,7 @@ package org.apache.spark
 
 import fdu.daslab.MocWorkerConstants.DEFAULT_EXECUTOR_ID
 import fdu.daslab.Worker
+import org.apache.spark.metrics.{MetricsSystem, MetricsSystemInstances}
 import org.apache.spark.rpc.RpcEndpointRef
 import org.apache.spark.scheduler.TaskDescription
 import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.{LaunchTask, LaunchedExecutor, SparkAppConfig}
@@ -19,6 +20,9 @@ class Receiver(driver: RpcEndpointRef, conf: SparkConf, cfg: SparkAppConfig) {
 
   executorEnv.blockManager.initialize(conf.getAppId)
 
+//  val securityManager = new SecurityManager(conf, null, null)
+//  val ms: MetricsSystem = MetricsSystem.createMetricsSystem(MetricsSystemInstances.DRIVER, conf, securityManager)
+//  ms.start(true)
 
   def main(args: Array[String]): Unit = {
     val isOdd: PartialFunction[Int, String] = {
