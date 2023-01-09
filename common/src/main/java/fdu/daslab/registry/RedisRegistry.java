@@ -13,7 +13,7 @@ public class RedisRegistry {
 
     public static synchronized Jedis getRedisClientInstance() {
         if (jedis == null) {
-            jedis = new Jedis("139.196.231.71",6379);
+            jedis = new Jedis("139.196.231.71", 6379);
             jedis.auth("Ramsey.16");
             jedis.ping();
         }

@@ -69,7 +69,7 @@ mvn clean scala:compile compile
 
 2. Yarn Mode
 
-    Basically done, can not dynamically synchronize configuration in `common.properties`. 
+    Move `common.properties` to `HADOOP_CONF_DIR`, due to lack of some configuration, will make sure how to avoid this step later. 
     
 <br>
 

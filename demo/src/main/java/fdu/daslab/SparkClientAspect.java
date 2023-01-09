@@ -100,7 +100,6 @@ public class SparkClientAspect {
             "within(org.apache.spark.rpc.netty..*) && !within(SparkClientAspect)")
     public Object sendMessage(ProceedingJoinPoint point) throws Throwable {
         Object[] args = point.getArgs();
-//        logger.info("############ Sending Request");
         logger.info("########## Send Message: {}", args[0]);
         // TODO: Use design pattern to tidy up the following code
         if (args != null && args.length > 0 && args[0].getClass() == RequestMessage.class) {

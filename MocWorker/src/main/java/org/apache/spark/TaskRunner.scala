@@ -1,8 +1,7 @@
 package org.apache.spark
 
 import fdu.daslab.MocWorkerConstants.DEFAULT_EXECUTOR_ID
-import fdu.daslab.Worker
-import org.apache.spark.metrics.{MetricsSystem, MetricsSystemInstances}
+import org.apache.spark.memory.TaskMemoryManager
 import org.apache.spark.resource.ResourceInformation
 import org.apache.spark.rpc.RpcEndpointRef
 import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.{SparkAppConfig, StatusUpdate}
@@ -13,6 +12,7 @@ import org.apache.spark.util.{ByteBufferOutputStream, MutableURLClassLoader}
 import java.io.File
 import java.net.URL
 import java.nio.ByteBuffer
+import java.util.Properties
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.ArrayBuffer
 
@@ -33,7 +33,10 @@ class TaskRunner(driver: RpcEndpointRef, conf: SparkConf, cfg: SparkAppConfig, t
         val ser: SerializerInstance = new JavaSerializer(conf).setDefaultClassLoader(Thread.currentThread.getContextClassLoader).newInstance()
 
         val task: Task[Any] = ser.deserialize[Task[Any]](taskDescription.serializedTask, Thread.currentThread.getContextClassLoader)
-
+        val taskMemoryManager = new TaskMemoryManager(SparkEnv.get.memoryManager, taskDescription.taskId)
+        task.setTaskMemoryManager(taskMemoryManager)
+        task.localProperties = new Properties()
+        task.localProperties.setProperty("spark.sql.execution.id", DEFAULT_EXECUTOR_ID)
         val value: Any = task.run(
           taskAttemptId = taskDescription.taskId,
           attemptNumber = taskDescription.attemptNumber,
