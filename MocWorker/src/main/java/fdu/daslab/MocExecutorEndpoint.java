@@ -78,7 +78,7 @@ public class MocExecutorEndpoint implements IsolatedRpcEndpoint {
         }
 
         logger.info("MockWorker retrieve Spark app Config ...");
-        SparkAppConfig cfg = driver.askSync(new RetrieveSparkAppConfig(0), ClassTag$.MODULE$.apply(SparkAppConfig.class));
+        SparkAppConfig cfg = (SparkAppConfig) driver.askSync(new RetrieveSparkAppConfig(0), ClassTag$.MODULE$.apply(SparkAppConfig.class));
         Seq<Tuple2<String, String>> props = cfg.sparkProperties();
         props.foreach(prop -> {
             logger.info("Set executor conf : {} = {}", prop._1, prop._2);

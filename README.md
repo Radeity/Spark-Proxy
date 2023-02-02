@@ -53,9 +53,9 @@ mvn clean scala:compile compile
 
 **Submit application:**
 
-1. Standalone Mode (Start worker first)
+1. Standalone Mode
 
-  - Configure `reschedule.dst.executor` in `common.properties` which decides re-scheduler to internal or external executors.
+  - Configure `reschedule.dst.executor` in `common.properties` which decides re-scheduler to internal or external executors. Move to `$SPARK_HOME/conf`
 
   - Replace `jarDir` in `TaskRunner` with example JAR path in external executor (will support auto-fetching later).
 
@@ -68,8 +68,16 @@ mvn clean scala:compile compile
   ```
 
 2. Yarn Mode
+   
+  - Move `common.properties` to `HADOOP_CONF_DIR`, due to lack of some configuration, will make sure how to avoid this step later. 
 
-    Move `common.properties` to `HADOOP_CONF_DIR`, due to lack of some configuration, will make sure how to avoid this step later. 
+  - Support Remote Shuffle Service [(apache/incubator-celeborn)](https://github.com/apache/incubator-celeborn).
+    - Follow celeborn doc to deploy celeborn cluster.
+    - Move celeborn client jar to `$SPARK_HOME/jars`, also to external worker node.
+    - Update `MocWorker/pom.xml` and set your own celeborn client jar path.
+    - Add celeborn-related spark configuration refer to celeborn doc. 
+
+  - Other steps remain the same with standalone mode.
     
 <br>
 
@@ -81,12 +89,16 @@ mvn clean scala:compile compile
 
 3. Synchronize re-dispatch info with Driver.
 
-4. Support task graph generation.
+4. External worker can be aware of and register to new driver automatically. 
 
-5. Support whole life cycle management of external executor (start, stop, listening).
+5. Support task graph generation.
 
-6. Support `IndirectTaskResult`.
+6. Support whole life cycle management of external executor (start, stop, listening).
 
-7. Support metrics report.
+7. Support `IndirectTaskResult`.
+
+8. Support metrics report.
+
+9. Package external worker, and support dynamically edit properties such as application and rss jar path. 
 
     

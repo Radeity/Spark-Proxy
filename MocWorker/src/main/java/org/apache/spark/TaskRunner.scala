@@ -6,7 +6,7 @@ import org.apache.spark.resource.ResourceInformation
 import org.apache.spark.rpc.RpcEndpointRef
 import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.{SparkAppConfig, StatusUpdate}
 import org.apache.spark.scheduler.{DirectTaskResult, Task, TaskDescription}
-import org.apache.spark.serializer.{JavaSerializationStream, JavaSerializer, SerializerInstance}
+import org.apache.spark.serializer.{JavaSerializationStream, JavaSerializer, SerializerInstance, KryoSerializer}
 import org.apache.spark.util.{ByteBufferOutputStream, MutableURLClassLoader}
 
 import java.io.File
@@ -29,8 +29,9 @@ class TaskRunner(driver: RpcEndpointRef, conf: SparkConf, cfg: SparkAppConfig, t
         val urls = getSparkClassLoader()
         Thread.currentThread.setContextClassLoader(new MutableURLClassLoader(urls, currentLoader))
 
-        //        val ser: SerializerInstance = serializer.setDefaultClassLoader(Thread.currentThread.getContextClassLoader).newInstance()
-        val ser: SerializerInstance = new JavaSerializer(conf).setDefaultClassLoader(Thread.currentThread.getContextClassLoader).newInstance()
+        val ser: SerializerInstance = SparkEnv.get.closureSerializer.setDefaultClassLoader(Thread.currentThread.getContextClassLoader).newInstance()
+//        val ser: SerializerInstance = new JavaSerializer(conf).setDefaultClassLoader(Thread.currentThread.getContextClassLoader).newInstance()
+  //      val ser: SerializerInstance = new KryoSerializer(conf).setDefaultClassLoader(Thread.currentThread.getContextClassLoader).newInstance()
 
         val task: Task[Any] = ser.deserialize[Task[Any]](taskDescription.serializedTask, Thread.currentThread.getContextClassLoader)
         val taskMemoryManager = new TaskMemoryManager(SparkEnv.get.memoryManager, taskDescription.taskId)
@@ -43,7 +44,9 @@ class TaskRunner(driver: RpcEndpointRef, conf: SparkConf, cfg: SparkAppConfig, t
           metricsSystem = SparkEnv.get.metricsSystem,
           resources = taskDescription.resources,
           plugins = None)
-        serialize2ByteBuffer(value)
+
+        val resSer = SparkEnv.get.serializer.newInstance()
+        resSer.serialize(value)
       } else {
         // Skip task running and directly return `Integer.MAX_VALUE/100`
         serialize2ByteBuffer(Option(Integer.MAX_VALUE / 100))
@@ -67,8 +70,6 @@ class TaskRunner(driver: RpcEndpointRef, conf: SparkConf, cfg: SparkAppConfig, t
   }
 
   def getSparkClassLoader(): Array[URL] = {
-//    val jarDir = new File("/home/workflow/software/spark/spark-3.1.2-bin-hadoop3.2/jars")
-
     // add example jars to external classpath for deserializing Task
     val jarDir = new File("/home/workflow/software/spark/spark-3.1.2-bin-hadoop3.2/examples/jars")
     val jars = jarDir.listFiles()
