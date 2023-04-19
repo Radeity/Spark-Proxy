@@ -62,24 +62,31 @@ public class RegisterUtils {
                 : String.format("spark://%s:%s", address.host(), address.port());
     }
 
-    public static ExecutorEndpointRefInfo getNewExecutorEndpointRef(String oriKey, boolean inClusterFlag) throws IOException, ClassNotFoundException {
+    public static ExecutorEndpointRefInfo getNewExecutorEndpointRef(String oriKey, boolean inClusterFlag) {
         // TODO: Add some other scheduling strategies, random selection should be just one of them
+        ExecutorEndpointRefInfo executorEndpointRefInfo;
+
         Random r = new Random();
 
         r.setSeed(new Date().getTime());
-
         if (inClusterFlag) {
             int i = r.nextInt(executorDataMap.size());
             while (executorIndex.get(i).equals(oriKey)) {
                 i = r.nextInt(executorDataMap.size());
             }
             // randomly choose new executor
-            return executorDataMap.get(executorIndex.get(i));
+            executorEndpointRefInfo = executorDataMap.get(executorIndex.get(i));
         } else {
             Jedis redisClient = RedisRegistry.getRedisClientInstance();
             int i = r.nextInt(externalExecutorIndex.size());
             byte[] bytes = redisClient.get(externalExecutorIndex.get(i).getBytes());
-            return (ExecutorEndpointRefInfo) SerializeUtils.deserialize(bytes);
+            try {
+                executorEndpointRefInfo = (ExecutorEndpointRefInfo) SerializeUtils.deserialize(bytes);
+            } catch (Exception e) {
+                logger.error("Can not deserialize external executor's EndPointRef, dispatch to in-cluster executor");
+                executorEndpointRefInfo = getNewExecutorEndpointRef(oriKey, true);
+            }
         }
+        return executorEndpointRefInfo;
     }
 }
