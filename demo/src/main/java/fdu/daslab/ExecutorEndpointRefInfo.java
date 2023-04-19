@@ -10,8 +10,8 @@ import java.io.Serializable;
  * @date 2022/12/1 6:13 PM
  */
 public class ExecutorEndpointRefInfo implements Serializable {
-    NettyRpcEndpointRef executorEndpointRef;
-    String execId;
+    public NettyRpcEndpointRef executorEndpointRef;
+    public String execId;
 
     public ExecutorEndpointRefInfo(NettyRpcEndpointRef executorEndpointRef, String execId) {
         this.executorEndpointRef = executorEndpointRef;

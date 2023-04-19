@@ -3,7 +3,6 @@ package fdu.daslab.utils;
 import fdu.daslab.ExecutorEndpointRefInfo;
 import fdu.daslab.registry.RedisRegistry;
 import org.apache.spark.rpc.RpcAddress;
-import org.apache.spark.rpc.RpcEndpointRef;
 import org.apache.spark.rpc.netty.NettyRpcEndpointRef;
 import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages;
 import org.slf4j.Logger;
@@ -11,8 +10,12 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 import static fdu.daslab.constants.Constants.executorEndpointRefKey;
 
@@ -35,7 +38,7 @@ public class RegisterUtils {
         return executorDataMap.get(key);
     }
 
-    public static void recordExecutor(CoarseGrainedClusterMessages.RegisterExecutor content, boolean inClusterFlag) throws IOException {
+    public static void recordExecutor(CoarseGrainedClusterMessages.RegisterExecutor content, boolean inClusterFlag) {
         String execId = content.executorId();
         logger.info("Record Executor {}, InClusterFlag: {}", execId, inClusterFlag);
         NettyRpcEndpointRef executorRef = (NettyRpcEndpointRef) content.executorRef();
@@ -51,8 +54,12 @@ public class RegisterUtils {
             String key = String.format(executorEndpointRefKey, content.executorId());
             externalExecutorIndex.add(key);
             Jedis redisClient = RedisRegistry.getRedisClientInstance();
-            byte[] value = SerializeUtils.serialize(executorEndpointRefInfo);
-            redisClient.set(key.getBytes(), value);
+            try {
+                byte[] value = SerializeUtils.serialize(executorEndpointRefInfo);
+                redisClient.set(key.getBytes(), value);
+            } catch (IOException e) {
+                logger.error("Register external executor error", e);
+            }
         }
     }
 

@@ -2,17 +2,10 @@
 <aspectj>
 
     <aspects>
-        <aspect name="fdu.daslab.SparkAspect"/>
-        <aspect name="fdu.daslab.SparkClientAspect"/>
+        <aspect name="fdu.daslab.aspect.SparkAspect"/>
+        <aspect name="fdu.daslab.aspect.SparkClientAspect"/>
     </aspects>
     <weaver options="-Xset:weaveJavaxPackages=true"/>
     <weaver options="-verbose -showWeaveInfo"/>
 
-<!--    <aspects>-->
-<!--        <aspect name="fdu.daslab.YarnClientAspect"/>-->
-<!--        <weaver options="-verbose -showWeaveInfo">-->
-<!--            <include within="org.apache.spark.network.client..*"/>-->
-<!--            <include within="org.apache.hadoop.yarn.client.api.impl..*"/>-->
-<!--        </weaver>-->
-<!--    </aspects>-->
 </aspectj>

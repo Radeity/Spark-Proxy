@@ -4,7 +4,11 @@ import fdu.daslab.registry.RedisRegistry;
 import org.apache.spark.Receiver;
 import org.apache.spark.SparkConf;
 import org.apache.spark.resource.ResourceInformation;
-import org.apache.spark.rpc.*;
+import org.apache.spark.rpc.IsolatedRpcEndpoint;
+import org.apache.spark.rpc.RpcAddress;
+import org.apache.spark.rpc.RpcCallContext;
+import org.apache.spark.rpc.RpcEndpointRef;
+import org.apache.spark.rpc.RpcEnv;
 import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.RegisterExecutor;
 import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.RetrieveSparkAppConfig;
 import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.SparkAppConfig;
@@ -78,7 +82,7 @@ public class MocExecutorEndpoint implements IsolatedRpcEndpoint {
         }
 
         logger.info("MockWorker retrieve Spark app Config ...");
-        SparkAppConfig cfg = (SparkAppConfig) driver.askSync(new RetrieveSparkAppConfig(0), ClassTag$.MODULE$.apply(SparkAppConfig.class));
+        SparkAppConfig cfg = driver.askSync(new RetrieveSparkAppConfig(0), ClassTag$.MODULE$.apply(SparkAppConfig.class));
         Seq<Tuple2<String, String>> props = cfg.sparkProperties();
         props.foreach(prop -> {
             logger.info("Set executor conf : {} = {}", prop._1, prop._2);

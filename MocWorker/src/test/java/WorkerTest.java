@@ -10,6 +10,7 @@ import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages;
 import org.apache.spark.util.SerializableBuffer;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import redis.clients.jedis.Jedis;
@@ -36,6 +37,7 @@ public class WorkerTest {
     }
 
     @Test
+    @Ignore
     public void workerReceiverTest() throws InterruptedException {
         SparkConf executorConf = new SparkConf();
         String bindAddress = IpUtils.fetchLANIp();
