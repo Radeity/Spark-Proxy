@@ -15,10 +15,12 @@ Push-based calculation for `Spark` job via aop.
 
 ## Quick Start
 
+> Please make sure that version of Spark dependency (demo/pom.xml) and your Spark cluster must be consistent.
+
 **Package:**
 
 ```shell
-mvn clean scala:compile compile
+mvn clean scala:compile compile package
 ```
 <br>
 

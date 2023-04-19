@@ -63,9 +63,9 @@ public class RegisterUtils {
     }
 
     public static ExecutorEndpointRefInfo getNewExecutorEndpointRef(String oriKey, boolean inClusterFlag) throws IOException, ClassNotFoundException {
+        // TODO: Add some other scheduling strategies, random selection should be just one of them
         Random r = new Random();
 
-        // add random seed
         r.setSeed(new Date().getTime());
 
         if (inClusterFlag) {
