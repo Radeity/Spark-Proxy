@@ -100,7 +100,7 @@ public class MocExecutorEndpoint implements IsolatedRpcEndpoint {
         Map<String, String> emptyMap = new HashMap<>();
         Map<String, ResourceInformation> emptyResourceInformationMap = new HashMap<>();
 
-        driver.ask(new RegisterExecutor(DEFAULT_EXECUTOR_ID, self(), Worker.bindAddress, 1, emptyMap, emptyMap, emptyResourceInformationMap, 0), ClassTag$.MODULE$.apply(Boolean.class));
+        driver.ask(new RegisterExecutor(DEFAULT_EXECUTOR_ID, self(), MocWorkerConstants.bindAddress, 1, emptyMap, emptyMap, emptyResourceInformationMap, 0), ClassTag$.MODULE$.apply(Boolean.class));
 
         receiver = new Receiver(driver, conf, cfg);
     }

@@ -1,8 +1,7 @@
 package org.apache.spark
 
+import fdu.daslab.MocWorkerConstants
 import fdu.daslab.MocWorkerConstants.DEFAULT_EXECUTOR_ID
-import fdu.daslab.Worker
-import org.apache.spark.metrics.{MetricsSystem, MetricsSystemInstances}
 import org.apache.spark.rpc.RpcEndpointRef
 import org.apache.spark.scheduler.TaskDescription
 import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.{LaunchTask, LaunchedExecutor, SparkAppConfig}
@@ -16,7 +15,7 @@ import java.nio.ByteBuffer
  */
 class Receiver(driver: RpcEndpointRef, conf: SparkConf, cfg: SparkAppConfig) {
 
-  val executorEnv = SparkEnv.createExecutorEnv(conf, DEFAULT_EXECUTOR_ID, Worker.bindAddress, Worker.bindAddress, 1, cfg.ioEncryptionKey, false)
+  val executorEnv = SparkEnv.createExecutorEnv(conf, DEFAULT_EXECUTOR_ID, MocWorkerConstants.bindAddress, MocWorkerConstants.bindAddress, 1, cfg.ioEncryptionKey, false)
 
   executorEnv.blockManager.initialize(conf.getAppId)
 

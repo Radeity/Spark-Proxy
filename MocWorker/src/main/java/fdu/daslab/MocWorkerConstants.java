@@ -1,5 +1,7 @@
 package fdu.daslab;
 
+import fdu.daslab.utils.IpUtils;
+
 /**
  * @author Aaron Wang
  * @version 1.0
@@ -10,5 +12,7 @@ public final class MocWorkerConstants {
     public static final String EXECUTOR = "spark.executor.id";
 
     public static final String DEFAULT_EXECUTOR_ID = "16";
+
+    public static String bindAddress = IpUtils.fetchLANIp();
 
 }

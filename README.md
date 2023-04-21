@@ -1,5 +1,5 @@
 # Spark-Proxy
-Push-based calculation for `Spark` job via aop.
+Spark-Proxy supports push-based calculation for `Spark` job via aop. It can intercept launch task messages in Spark's driver, re-dispatch them to external executors which have been registered in register center (simply use Redis now).
 <br><br>
 
 ## Code Structure
