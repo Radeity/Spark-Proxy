@@ -11,6 +11,7 @@ public final class MocWorkerConstants {
 
     public static final String EXECUTOR = "spark.executor.id";
 
+    // TODO: replace hard-code
     public static final String DEFAULT_EXECUTOR_ID = "16";
 
     public static String bindAddress = IpUtils.fetchLANIp();

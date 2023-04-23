@@ -13,11 +13,7 @@ import java.nio.ByteBuffer
  * @date 2022/12/12 7:40 PM
  * @version 1.0
  */
-class Receiver(driver: RpcEndpointRef, conf: SparkConf, cfg: SparkAppConfig) {
-
-  val executorEnv = SparkEnv.createExecutorEnv(conf, DEFAULT_EXECUTOR_ID, MocWorkerConstants.bindAddress, MocWorkerConstants.bindAddress, 1, cfg.ioEncryptionKey, false)
-
-  executorEnv.blockManager.initialize(conf.getAppId)
+class Receiver(taskDispatcher: TaskDispatcher) {
 
 //  val securityManager = new SecurityManager(conf, null, null)
 //  val ms: MetricsSystem = MetricsSystem.createMetricsSystem(MetricsSystemInstances.DRIVER, conf, securityManager)
@@ -41,8 +37,7 @@ class Receiver(driver: RpcEndpointRef, conf: SparkConf, cfg: SparkAppConfig) {
       val newByteBuffer: ByteBuffer = data.value.duplicate
       val taskDescription: TaskDescription = TaskDescription.decode(newByteBuffer)
 
-      val tr = new TaskRunner(driver, conf, cfg, taskDescription)
-      tr.run()
+      taskDispatcher.receiveTask(taskDescription)
 
     case _ => println("No matching receiver!")
   }

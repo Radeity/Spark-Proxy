@@ -1,8 +1,11 @@
 package fdu.daslab;
 
 import fdu.daslab.registry.RedisRegistry;
+import fdu.daslab.scheduler.SchedulingStrategy;
+import org.apache.spark.TaskPool;
 import org.apache.spark.Receiver;
 import org.apache.spark.SparkConf;
+import org.apache.spark.TaskDispatcher;
 import org.apache.spark.resource.ResourceInformation;
 import org.apache.spark.rpc.IsolatedRpcEndpoint;
 import org.apache.spark.rpc.RpcAddress;
@@ -44,6 +47,8 @@ public class MocExecutorEndpoint implements IsolatedRpcEndpoint {
     public SparkConf conf;
 
     public Receiver receiver;
+
+    public TaskDispatcher taskDispatcher;
 
     public RpcEndpointRef driver;
 
@@ -102,7 +107,14 @@ public class MocExecutorEndpoint implements IsolatedRpcEndpoint {
 
         driver.ask(new RegisterExecutor(DEFAULT_EXECUTOR_ID, self(), MocWorkerConstants.bindAddress, 1, emptyMap, emptyMap, emptyResourceInformationMap, 0), ClassTag$.MODULE$.apply(Boolean.class));
 
-        receiver = new Receiver(driver, conf, cfg);
+        TaskPool taskPool = new TaskPool(SchedulingStrategy.FIFO);
+
+        taskDispatcher = new TaskDispatcher(driver, conf, cfg, taskPool);
+
+        receiver = new Receiver(taskDispatcher);
+
+        MocDispatchTaskCaller mocDispatchTaskCaller = new MocDispatchTaskCaller(taskDispatcher);
+        mocDispatchTaskCaller.startDispatchTask();
     }
 
     @Override
@@ -149,6 +161,7 @@ public class MocExecutorEndpoint implements IsolatedRpcEndpoint {
         IsolatedRpcEndpoint.super.onNetworkError(cause, remoteAddress);
     }
 
+    // TODO: handle TransportResponseHandler ERROR: Still have 1 request outstanding when connection from analysis-5/10.176.24.55:33885 is closed
     @Override
     public void onStop() {
         IsolatedRpcEndpoint.super.onStop();

@@ -7,18 +7,14 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.rpc.RpcEndpointRef;
 import org.apache.spark.rpc.RpcEnv;
 import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages;
-import org.apache.spark.util.SerializableBuffer;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.Mockito;
 import redis.clients.jedis.Jedis;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 
 import static fdu.daslab.constants.Constants.driverURLKey;
 import static fdu.daslab.constants.Constants.executorSystemName;
@@ -52,7 +48,7 @@ public class WorkerTest {
 
         MocExecutorEndpoint mocWorkerEndpoint = new MocExecutorEndpoint(executorRpcEnv, executorConf);
 
-        mocWorkerEndpoint.receiver = new Receiver(null, executorConf, null);
+        mocWorkerEndpoint.receiver = new Receiver(null);
         executorRpcEnv.setupEndpoint("Executor", mocWorkerEndpoint);
         Thread.sleep(1000);
         Jedis redisClient = RedisRegistry.getRedisClientInstance();
