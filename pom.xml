@@ -10,12 +10,13 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>common</module>
-        <module>demo</module>
-        <module>MocWorker</module>
+        <module>Agent</module>
+        <module>Dispatcher</module>
+        <module>Worker</module>
     </modules>
 
     <name>Aop2YarnClient</name>
-    <description>demo to push-out computation</description>
+    <description>spark agent for push-out computation</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

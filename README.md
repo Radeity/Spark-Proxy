@@ -4,18 +4,18 @@ Spark-Proxy supports push-based calculation for `Spark` job via aop. It can inte
 
 ## Code Structure
 
-**Aop**
+**Agent**
 
-`demo/src/main/java/fdu/daslab/SparkClientAspect.java`
+`Agent/src/main/java/fdu/daslab/SparkClientAspect.java`
 
-**Mock Remote Worker**
+**Remote Dispatcher**
 
-`MocWorker/src/main/java/fdu/daslab/Worker.java`
+`Dispatcher/src/main/java/fdu/daslab/Worker.java`
 <br><br>
 
 ## Quick Start
 
-> Please make sure that version of Spark dependency (demo/pom.xml) and your Spark cluster must be consistent.
+> Please make sure that version of Spark dependency (Agent/pom.xml) and your Spark cluster must be consistent.
 
 **Package:**
 
@@ -45,11 +45,11 @@ mvn clean scala:compile compile package
 
   ```shell
   mv common/target/common-1.0-SNAPSHOT.jar $SPARK_HOME/jars
-  mv demo/target/demo-1.0-SNAPSHOT.jar $SPARK_HOME/jars
+  mv Agent/target/Agent-1.0-SNAPSHOT.jar $SPARK_HOME/jars
   mv jedis-4.3.1.jar (Download from https://repo1.maven.org/maven2/redis/clients/jedis/4.3.1/jedis-4.3.1.jar) $SPARK_HOME/jars
   ```
 
-5. Move `demo/src/main/resources/common.properties` to Spark conf directory. 
+5. Move `Agent/src/main/resources/common.properties` to Spark conf directory. 
 
 <br>
 
@@ -76,7 +76,7 @@ mvn clean scala:compile compile package
   - Support Remote Shuffle Service [(apache/incubator-celeborn)](https://github.com/apache/incubator-celeborn).
     - Follow celeborn doc to deploy celeborn cluster.
     - Move celeborn client jar to `$SPARK_HOME/jars`, also to external worker node.
-    - Update `MocWorker/pom.xml` and set your own celeborn client jar path.
+    - Update `Dispatcher/pom.xml` and set your own celeborn client jar path.
     - Add celeborn-related spark configuration refer to celeborn doc. 
 
   - Other steps remain the same with standalone mode.
