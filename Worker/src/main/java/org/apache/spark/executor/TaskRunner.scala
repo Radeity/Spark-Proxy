@@ -1,13 +1,6 @@
-package org.apache.spark
+package org.apache.spark.executor
 
-import fdu.daslab.dispatcher.DispatcherConstants.DEFAULT_EXECUTOR_ID
-import org.apache.spark.memory.TaskMemoryManager
-import org.apache.spark.resource.ResourceInformation
-import org.apache.spark.rpc.RpcEndpointRef
-import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.{SparkAppConfig, StatusUpdate}
-import org.apache.spark.scheduler.{DirectTaskResult, Task, TaskDescription}
-import org.apache.spark.serializer.{JavaSerializationStream, JavaSerializer, SerializerInstance, KryoSerializer}
-import org.apache.spark.util.{ByteBufferOutputStream, MutableURLClassLoader}
+import org.apache.spark.worker.WorkerConstants.DEFAULT_EXECUTOR_ID
 
 import java.io.File
 import java.net.URL
@@ -15,8 +8,22 @@ import java.nio.ByteBuffer
 import java.util.Properties
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.ArrayBuffer
+import org.apache.spark.memory.TaskMemoryManager
+import org.apache.spark.{SparkEnv, SparkConf, TaskState}
+import org.apache.spark.resource.ResourceInformation
+import org.apache.spark.rpc.RpcEndpointRef
+import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.StatusUpdate
+import org.apache.spark.scheduler.{DirectTaskResult, Task, TaskDescription}
+import org.apache.spark.serializer.{JavaSerializationStream, JavaSerializer, SerializerInstance, KryoSerializer}
+import org.apache.spark.util.{ByteBufferOutputStream, MutableURLClassLoader}
 
-class TaskRunner(driver: RpcEndpointRef, conf: SparkConf, cfg: SparkAppConfig, taskDescription: TaskDescription) extends Runnable {
+
+/**
+ * @author Aaron Wang
+ * @date 2022/12/12 8:16 PM
+ * @version 1.0
+ */
+class TaskRunner(dispatcher: RpcEndpointRef, conf: SparkConf, taskDescription: TaskDescription) extends Runnable {
   override def run(): Unit = {
 
     // if executeFlag = true, task logic will be actually executed
@@ -30,8 +37,8 @@ class TaskRunner(driver: RpcEndpointRef, conf: SparkConf, cfg: SparkAppConfig, t
         Thread.currentThread.setContextClassLoader(new MutableURLClassLoader(urls, currentLoader))
 
         val ser: SerializerInstance = SparkEnv.get.closureSerializer.setDefaultClassLoader(Thread.currentThread.getContextClassLoader).newInstance()
-//        val ser: SerializerInstance = new JavaSerializer(conf).setDefaultClassLoader(Thread.currentThread.getContextClassLoader).newInstance()
-  //      val ser: SerializerInstance = new KryoSerializer(conf).setDefaultClassLoader(Thread.currentThread.getContextClassLoader).newInstance()
+        //        val ser: SerializerInstance = new JavaSerializer(conf).setDefaultClassLoader(Thread.currentThread.getContextClassLoader).newInstance()
+        //      val ser: SerializerInstance = new KryoSerializer(conf).setDefaultClassLoader(Thread.currentThread.getContextClassLoader).newInstance()
 
         val task: Task[Any] = ser.deserialize[Task[Any]](taskDescription.serializedTask, Thread.currentThread.getContextClassLoader)
         val taskMemoryManager = new TaskMemoryManager(SparkEnv.get.memoryManager, taskDescription.taskId)
@@ -58,7 +65,7 @@ class TaskRunner(driver: RpcEndpointRef, conf: SparkConf, cfg: SparkAppConfig, t
     // Assume that result size is smaller than maxDirectResultSize, directly send back without block manager.
     val msg: StatusUpdate = StatusUpdate(taskDescription.executorId, taskDescription.taskId, TaskState.FINISHED, resultBuffer, emptyResourceInformationMap)
     println("Sending message: " + msg)
-    driver.send(msg)
+    dispatcher.send(msg)
   }
 
   def serialize2ByteBuffer(source: Any): ByteBuffer = {

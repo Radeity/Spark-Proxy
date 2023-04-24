@@ -1,4 +1,4 @@
-package fdu.daslab.dispatcher.utils;
+package fdu.daslab.utils;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -11,7 +11,7 @@ import java.util.Enumeration;
 /**
  * @author Aaron Wang
  * @version 1.0
- * @date 2022/12/13 10:32 AM
+ * @date 2023/4/24 11:09 AM
  */
 public class IpUtils {
 
@@ -69,3 +69,4 @@ public class IpUtils {
 
 
 }
+

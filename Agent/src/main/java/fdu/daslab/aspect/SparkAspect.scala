@@ -1,11 +1,7 @@
 package fdu.daslab.aspect
 
-import org.apache.spark.deploy.ApplicationDescription
 import org.aspectj.lang.{JoinPoint, ProceedingJoinPoint}
 import org.aspectj.lang.annotation.{AfterReturning, Around, Aspect}
-import org.apache.spark.deploy.worker.ExecutorRunner
-import org.apache.spark.internal.config.SPARK_EXECUTOR_PREFIX
-import org.apache.spark.util.Utils
 
 /**
  * @author Aaron Wang

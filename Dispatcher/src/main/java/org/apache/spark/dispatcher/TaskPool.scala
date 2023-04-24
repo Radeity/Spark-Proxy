@@ -1,6 +1,7 @@
-package org.apache.spark
+package org.apache.spark.dispatcher
 
-import fdu.daslab.dispatcher.scheduler.{CustomizedSchedulingAlgorithm, FIFOSchedulingAlgorithm, SchedulingStrategy}
+import org.apache.spark.java.dispatcher.scheduler.CustomizedSchedulingAlgorithm
+import org.apache.spark.java.dispatcher.scheduler.{CustomizedSchedulingAlgorithm, FIFOSchedulingAlgorithm, SchedulingStrategy}
 import org.apache.spark.scheduler.TaskDescription
 
 import java.util.concurrent.PriorityBlockingQueue
@@ -8,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * @author Aaron Wang
- * @date 2023/4/23 15:32 PM
+ * @date 2023/4/23 3:32 PM
  * @version 1.0
  */
 class TaskPool(schedulingStrategy: SchedulingStrategy) {

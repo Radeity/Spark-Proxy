@@ -1,6 +1,6 @@
-package fdu.daslab.dispatcher.scheduler;
+package org.apache.spark.java.dispatcher.scheduler;
 
-import org.apache.spark.WrappedTask;
+import org.apache.spark.dispatcher.WrappedTask;
 
 /**
  * @author Aaron Wang

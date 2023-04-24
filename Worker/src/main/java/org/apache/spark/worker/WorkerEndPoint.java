@@ -1,23 +1,15 @@
-package fdu.daslab.dispatcher;
+package org.apache.spark.worker;
 
-import fdu.daslab.dispatcher.scheduler.SchedulingStrategy;
-import fdu.daslab.registry.RedisRegistry;
-import org.apache.spark.TaskPool;
-import org.apache.spark.Receiver;
+import org.apache.spark.executor.Receiver;
 import org.apache.spark.SparkConf;
-import org.apache.spark.TaskDispatcher;
 import org.apache.spark.resource.ResourceInformation;
 import org.apache.spark.rpc.IsolatedRpcEndpoint;
 import org.apache.spark.rpc.RpcAddress;
 import org.apache.spark.rpc.RpcCallContext;
 import org.apache.spark.rpc.RpcEndpointRef;
 import org.apache.spark.rpc.RpcEnv;
-import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.RegisterExecutor;
-import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.RetrieveSparkAppConfig;
-import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.SparkAppConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.Jedis;
 import scala.PartialFunction;
 import scala.Tuple2;
 import scala.collection.Seq;
@@ -25,32 +17,31 @@ import scala.collection.immutable.HashMap;
 import scala.collection.immutable.Map;
 import scala.reflect.ClassTag$;
 import scala.runtime.BoxedUnit;
-
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
-import static fdu.daslab.constants.Constants.driverURLKey;
+import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.RegisterExecutor;
+import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.RetrieveSparkAppConfig;
+import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.SparkAppConfig;
+import org.apache.spark.message.ExtraMessages.GetDriver;
 
 /**
  * @author Aaron Wang
  * @version 1.0
- * @date 2022/12/11 4:05 PM
+ * @date 2023/4/24 11:12 AM
  */
-public class DispatcherEndpoint implements IsolatedRpcEndpoint {
+public class WorkerEndPoint implements IsolatedRpcEndpoint {
 
-    protected static final Logger logger = LoggerFactory.getLogger(DispatcherEndpoint.class);
+    protected static final Logger logger = LoggerFactory.getLogger(WorkerEndPoint.class);
 
     public RpcEnv rpcEnv;
 
     public SparkConf conf;
 
-    public Receiver receiver;
-
-    public TaskDispatcher taskDispatcher;
+    public RpcEndpointRef dispatcher;
 
     public RpcEndpointRef driver;
 
-    public DispatcherEndpoint(RpcEnv rpcEnv, SparkConf conf) {
+    public Receiver receiver;
+
+    public WorkerEndPoint(RpcEnv rpcEnv, SparkConf conf) {
         this.rpcEnv = rpcEnv;
         this.conf = conf;
     }
@@ -62,30 +53,25 @@ public class DispatcherEndpoint implements IsolatedRpcEndpoint {
 
     @Override
     public void onStart() {
-        Jedis redisClient = RedisRegistry.getRedisClientInstance();
-        redisClient.del(driverURLKey);
-        String driverURL = null;
-        while (driverURL == null) {
-            driverURL = redisClient.get(driverURLKey);
-            try {
-                Thread.sleep(20);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        logger.info("Starting Worker server ...");
+        // TODO: replace hard-code
+        String dispatcherURL = "spark://Dispatcher@10.176.24.58:16161";
         int nTries = 0;
-        while (driver == null && nTries < 3) {
+        while (dispatcher == null && nTries < 3) {
             try {
-                driver = rpcEnv().setupEndpointRefByURI(driverURL);
-                logger.info("Dispatcher connect to driver {} ...", driver);
+                dispatcher = rpcEnv().setupEndpointRefByURI(dispatcherURL);
             } catch (Throwable e) {
-                if (nTries == 2) throw e;
+                if (nTries == 2) {
+                    logger.error("Connect to Dispatcher failed, have tried three times!");
+                    throw e;
+                }
             }
             nTries++;
         }
+        logger.info("Successfully connect to Dispatcher {}", dispatcher.address());
 
         logger.info("Dispatcher retrieve Spark app Config ...");
-        SparkAppConfig cfg = driver.askSync(new RetrieveSparkAppConfig(0), ClassTag$.MODULE$.apply(SparkAppConfig.class));
+        SparkAppConfig cfg = (SparkAppConfig) dispatcher.askSync(new RetrieveSparkAppConfig(0), ClassTag$.MODULE$.apply(SparkAppConfig.class));
         Seq<Tuple2<String, String>> props = cfg.sparkProperties();
         props.foreach(prop -> {
             logger.info("Set executor conf : {} = {}", prop._1, prop._2);
@@ -96,23 +82,18 @@ public class DispatcherEndpoint implements IsolatedRpcEndpoint {
             }
             return prop;
         });
-        conf.set(DispatcherConstants.EXECUTOR, DispatcherConstants.DEFAULT_EXECUTOR_ID);
+        conf.set(WorkerConstants.EXECUTOR, WorkerConstants.DEFAULT_EXECUTOR_ID);
 
-        logger.info("Driver address: {}", driver.address());
+        driver = (RpcEndpointRef) dispatcher.askSync(new GetDriver(), ClassTag$.MODULE$.apply(RpcEndpointRef.class));
+
+        logger.info("Successfully get Driver {}", driver.address());
 
         Map<String, String> emptyMap = new HashMap<>();
         Map<String, ResourceInformation> emptyResourceInformationMap = new HashMap<>();
+        dispatcher.ask(new RegisterExecutor(WorkerConstants.DEFAULT_EXECUTOR_ID, self(), WorkerConstants.bindAddress, 1, emptyMap, emptyMap, emptyResourceInformationMap, 0), ClassTag$.MODULE$.apply(Boolean.class));
 
-        driver.ask(new RegisterExecutor(DispatcherConstants.DEFAULT_EXECUTOR_ID, self(), DispatcherConstants.bindAddress, 1, emptyMap, emptyMap, emptyResourceInformationMap, 0), ClassTag$.MODULE$.apply(Boolean.class));
+        receiver = new Receiver(this, cfg);
 
-        TaskPool taskPool = new TaskPool(SchedulingStrategy.FIFO);
-
-        taskDispatcher = new TaskDispatcher(driver, conf, cfg, taskPool);
-
-        receiver = new Receiver(taskDispatcher);
-
-        MocDispatchTaskCaller mocDispatchTaskCaller = new MocDispatchTaskCaller(taskDispatcher);
-        mocDispatchTaskCaller.startDispatchTask();
     }
 
     @Override
@@ -123,10 +104,6 @@ public class DispatcherEndpoint implements IsolatedRpcEndpoint {
     @Override
     public RpcEndpointRef self() {
         return IsolatedRpcEndpoint.super.self();
-    }
-
-    public static <T, U, R> Function<U, R> partial(BiFunction<T, U, R> f, T x) {
-        return (y) -> f.apply(x, y);
     }
 
     @Override
@@ -159,7 +136,6 @@ public class DispatcherEndpoint implements IsolatedRpcEndpoint {
         IsolatedRpcEndpoint.super.onNetworkError(cause, remoteAddress);
     }
 
-    // TODO: handle TransportResponseHandler ERROR: Still have 1 request outstanding when connection from analysis-5/10.176.24.55:33885 is closed
     @Override
     public void onStop() {
         IsolatedRpcEndpoint.super.onStop();

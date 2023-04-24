@@ -1,7 +1,7 @@
-import fdu.daslab.dispatcher.DispatcherEndpoint;
+import org.apache.spark.java.dispatcher.DispatcherEndpoint;
 import fdu.daslab.registry.RedisRegistry;
-import fdu.daslab.dispatcher.utils.IpUtils;
-import org.apache.spark.Receiver;
+import fdu.daslab.utils.IpUtils;
+import org.apache.spark.dispatcher.Receiver;
 import org.apache.spark.SecurityManager;
 import org.apache.spark.SparkConf;
 import org.apache.spark.rpc.RpcEndpointRef;
@@ -15,6 +15,8 @@ import redis.clients.jedis.Jedis;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import static fdu.daslab.constants.Constants.driverURLKey;
 import static fdu.daslab.constants.Constants.executorSystemName;
@@ -49,7 +51,7 @@ public class DispatcherTest {
         DispatcherEndpoint dispatcherEndpoint = new DispatcherEndpoint(executorRpcEnv, executorConf);
 
         dispatcherEndpoint.receiver = new Receiver(null);
-        executorRpcEnv.setupEndpoint("Executor", dispatcherEndpoint);
+        executorRpcEnv.setupEndpoint("Dispatcher", dispatcherEndpoint);
         Thread.sleep(1000);
         Jedis redisClient = RedisRegistry.getRedisClientInstance();
         redisClient.set(driverURLKey, "ramsey");
@@ -82,7 +84,15 @@ public class DispatcherTest {
         B b = new B(1, "sss");
         A a = (A) b;
         System.out.println(a.id);
+    }
 
+    @Test
+    public void testParseURI() throws URISyntaxException {
+        String dispatcherURL = "spark://Dispatcher@10.176.24.58:16161";
+
+        URI uri = new URI(dispatcherURL);
+        System.out.println(uri.getHost());
+        System.out.println(uri.getUserInfo());
     }
 
 }

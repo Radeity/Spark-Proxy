@@ -1,6 +1,7 @@
-import fdu.daslab.dispatcher.utils.IpUtils;
+import fdu.daslab.utils.IpUtils;
 import org.junit.Assert;
 import org.junit.Test;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;

@@ -1,11 +1,10 @@
-package fdu.daslab.dispatcher.runner;
+package org.apache.spark.java.dispatcher.runner;
 
-import fdu.daslab.dispatcher.DispatcherConstants;
-import fdu.daslab.dispatcher.DispatcherEndpoint;
 import org.apache.spark.SecurityManager;
 import org.apache.spark.SparkConf;
+import org.apache.spark.java.dispatcher.DispatcherConstants;
+import org.apache.spark.java.dispatcher.DispatcherEndpoint;
 import org.apache.spark.rpc.RpcEnv;
-import org.springframework.stereotype.Service;
 
 import java.io.Closeable;
 
@@ -16,7 +15,6 @@ import static fdu.daslab.constants.Constants.executorSystemName;
  * @date 2023/4/20 4:40 PM
  * @version 1.0
  */
-@Service
 public class SchedulerServer implements Closeable {
 
     public void run() {
@@ -35,7 +33,7 @@ public class SchedulerServer implements Closeable {
 
         DispatcherEndpoint dispatcherEndpoint = new DispatcherEndpoint(executorRpcEnv, executorConf);
 
-        executorRpcEnv.setupEndpoint("Executor", dispatcherEndpoint);
+        executorRpcEnv.setupEndpoint("Dispatcher", dispatcherEndpoint);
 
         // TODO: Send onStop message to stop executor
         executorRpcEnv.awaitTermination();

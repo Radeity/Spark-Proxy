@@ -1,10 +1,10 @@
-package org.apache.spark
+package org.apache.spark.dispatcher
 
 import org.apache.spark.scheduler.TaskDescription
 
 /**
  * @author Aaron Wang
- * @date 2023/4/23 15:32 PM
+ * @date 2023/4/23 3:34 PM
  * @version 1.0
  */
 class WrappedTask(

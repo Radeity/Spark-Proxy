@@ -1,7 +1,7 @@
-package fdu.daslab.dispatcher;
+package org.apache.spark.java.dispatcher;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.apache.spark.TaskDispatcher;
+import org.apache.spark.dispatcher.TaskDispatcher;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
