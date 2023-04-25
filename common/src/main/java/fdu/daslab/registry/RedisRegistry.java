@@ -1,6 +1,12 @@
 package fdu.daslab.registry;
 
+import fdu.daslab.utils.PropertyUtils;
 import redis.clients.jedis.Jedis;
+
+import static fdu.daslab.constants.Constants.REDIS_HOST;
+import static fdu.daslab.constants.Constants.REDIS_PASSWORD;
+import static fdu.daslab.constants.Constants.COMMON_PROPERTIES_PATH;
+
 
 /**
  * @author Aaron Wang
@@ -13,8 +19,8 @@ public class RedisRegistry {
 
     public static synchronized Jedis getRedisClientInstance() {
         if (jedis == null) {
-            jedis = new Jedis("139.196.231.71", 6379);
-            jedis.auth("Ramsey.16");
+            jedis = new Jedis(PropertyUtils.getValue(REDIS_HOST, COMMON_PROPERTIES_PATH), 6379);
+            jedis.auth(PropertyUtils.getValue(REDIS_PASSWORD, COMMON_PROPERTIES_PATH));
             jedis.ping();
         }
         return jedis;

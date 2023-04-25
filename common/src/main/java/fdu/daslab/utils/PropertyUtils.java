@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import static fdu.daslab.constants.Constants.rescheduleStrategy;
+import static fdu.daslab.constants.Constants.RESCHEDULE_STRATEGY;
 
 /**
  * @author Aaron Wang
@@ -42,7 +42,7 @@ public class PropertyUtils {
                 PropertyUtils.setValue(key, String.valueOf(v));
             });
         }
-        return properties.getProperty(rescheduleStrategy);
+        return properties.getProperty(propertyName);
     }
 
     public static void setValue(String key, String value) {

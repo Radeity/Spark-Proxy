@@ -17,7 +17,7 @@ import java.nio.ByteBuffer;
 import java.util.HashSet;
 
 import static fdu.daslab.constants.Constants.COMMON_PROPERTIES_PATH;
-import static fdu.daslab.constants.Constants.rescheduleStrategy;
+import static fdu.daslab.constants.Constants.RESCHEDULE_STRATEGY;
 import static fdu.daslab.utils.RegisterUtils.getExecutorKey;
 
 /**
@@ -40,7 +40,7 @@ public class LaunchTaskRequestHandler implements MessageRequestHandler {
         ExecutorEndpointRefInfo newExecutorEndpointRef = RegisterUtils.getExecutorEndpointRef(oriKey);
         String oriExecutorEndpointRef = newExecutorEndpointRef.toString();
 
-        boolean inClusterFlag = PropertyUtils.getValue(rescheduleStrategy, COMMON_PROPERTIES_PATH).equals("internal");
+        boolean inClusterFlag = PropertyUtils.getValue(RESCHEDULE_STRATEGY, COMMON_PROPERTIES_PATH).equals("internal");
 
         newExecutorEndpointRef = RegisterUtils.getNewExecutorEndpointRef(oriKey, inClusterFlag);
 

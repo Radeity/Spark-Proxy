@@ -1,19 +1,11 @@
 package fdu.daslab;
 
 import fdu.daslab.registry.RedisRegistry;
-import fdu.daslab.utils.RegisterUtils;
 import fdu.daslab.utils.SerializeUtils;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.URL;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Random;
 

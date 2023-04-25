@@ -10,7 +10,10 @@ Spark-Proxy supports push-based calculation for `Spark` job via aop. It can inte
 
 **Remote Dispatcher**
 
-`Dispatcher/src/main/java/fdu/daslab/Worker.java`
+`Dispatcher/src/main/java/org/apache/spark/java/dispatcher/Dispatcher.java`
+
+**Remote Worker**
+`Worker/src/main/java/org/apache/spark/worker/Worker.java`
 <br><br>
 
 ## Quick Start
@@ -53,6 +56,14 @@ mvn clean scala:compile compile package
 
 <br>
 
+**common.properties**
+| Property Name | Default Value | Meaning |
+|--|--|--|
+|reschedule.dst.executor|external|The default value means that re-scheduler each tasks to external workers. If you don't want to re-schedule, set this value to internal|
+|redis.host|(none)|Redis instance host, used to connect to redis(registry center).|
+|redis.password |(none)|Redis instance password, used to connect to redis(registry center).|
+<br>
+
 **Submit application:**
 
 1. Standalone Mode
@@ -61,7 +72,9 @@ mvn clean scala:compile compile package
 
   - Replace `jarDir` in `TaskRunner` with example JAR path in external executor (will support auto-fetching later).
 
-  - Launch worker first
+  - Launch Dispatcher
+
+  - Launch Worker
 
   - Submit Spark application
 

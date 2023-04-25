@@ -21,7 +21,11 @@ public class Constants {
 
     public static final String executorEndpointRefKey = "executor-%s";
 
-    public static final String rescheduleStrategy = "reschedule.dst.executor";
+    public static final String RESCHEDULE_STRATEGY = "reschedule.dst.executor";
+
+    public static final String REDIS_HOST = "redis.host";
+
+    public static final String REDIS_PASSWORD = "redis.password";
 
     public static final String COMMON_PROPERTIES_PATH = "/common.properties";
 
