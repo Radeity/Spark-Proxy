@@ -26,7 +26,7 @@ class ReplyReceiver(dispatcherEndpoint: DispatcherEndpoint) {
       context.reply(dispatcherEndpoint.cfg)
 
     case GetDriver() =>
-       context.reply(dispatcherEndpoint.driver)
+       context.reply(dispatcherEndpoint.driverURL)
 
     case _ => println("No matching reply receiver!")
 

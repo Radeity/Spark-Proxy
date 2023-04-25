@@ -55,6 +55,8 @@ public class DispatcherEndpoint implements IsolatedRpcEndpoint {
 
     public RpcEndpointRef driver;
 
+    public String driverURL = null;
+
     public SparkAppConfig cfg;
 
     public HashMap<String, RpcEndpointRef> executorMap;
@@ -75,7 +77,6 @@ public class DispatcherEndpoint implements IsolatedRpcEndpoint {
         logger.info("Starting Dispatcher server ...");
         Jedis redisClient = RedisRegistry.getRedisClientInstance();
         redisClient.del(driverURLKey);
-        String driverURL = null;
         while (driverURL == null) {
             driverURL = redisClient.get(driverURLKey);
             try {
@@ -100,7 +101,7 @@ public class DispatcherEndpoint implements IsolatedRpcEndpoint {
         logger.info("Successfully connect to Driver {}", driver.address());
 
         logger.info("Dispatcher retrieve Spark app Config ...");
-        cfg = driver.askSync(new RetrieveSparkAppConfig(0), ClassTag$.MODULE$.apply(SparkAppConfig.class));
+        cfg = (SparkAppConfig) driver.askSync(new RetrieveSparkAppConfig(0), ClassTag$.MODULE$.apply(SparkAppConfig.class));
 
         // can receive sync conf request from external Worker now.
         syncConfDone = true;

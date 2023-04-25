@@ -23,7 +23,7 @@ import org.apache.spark.util.{ByteBufferOutputStream, MutableURLClassLoader}
  * @date 2022/12/12 8:16 PM
  * @version 1.0
  */
-class TaskRunner(dispatcher: RpcEndpointRef, conf: SparkConf, taskDescription: TaskDescription) extends Runnable {
+class TaskRunner(driver: RpcEndpointRef, dispatcher: RpcEndpointRef, conf: SparkConf, taskDescription: TaskDescription) extends Runnable {
   override def run(): Unit = {
 
     // if executeFlag = true, task logic will be actually executed
@@ -65,7 +65,8 @@ class TaskRunner(dispatcher: RpcEndpointRef, conf: SparkConf, taskDescription: T
     // Assume that result size is smaller than maxDirectResultSize, directly send back without block manager.
     val msg: StatusUpdate = StatusUpdate(taskDescription.executorId, taskDescription.taskId, TaskState.FINISHED, resultBuffer, emptyResourceInformationMap)
     println("Sending message: " + msg)
-    dispatcher.send(msg)
+    driver.send(msg)
+//    dispatcher.send(msg)
   }
 
   def serialize2ByteBuffer(source: Any): ByteBuffer = {

@@ -84,8 +84,8 @@ public class WorkerEndPoint implements IsolatedRpcEndpoint {
         });
         conf.set(WorkerConstants.EXECUTOR, WorkerConstants.DEFAULT_EXECUTOR_ID);
 
-        driver = (RpcEndpointRef) dispatcher.askSync(new GetDriver(), ClassTag$.MODULE$.apply(RpcEndpointRef.class));
-
+        String driverURL = (String) dispatcher.askSync(new GetDriver(), ClassTag$.MODULE$.apply(String.class));
+        driver = rpcEnv().setupEndpointRefByURI(driverURL);
         logger.info("Successfully get Driver {}", driver.address());
 
         Map<String, String> emptyMap = new HashMap<>();

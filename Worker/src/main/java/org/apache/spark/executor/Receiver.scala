@@ -26,7 +26,7 @@ class Receiver(workerEndPoint: WorkerEndPoint, cfg: SparkAppConfig) {
       val newByteBuffer: ByteBuffer = data.value.duplicate
       val taskDescription: TaskDescription = TaskDescription.decode(newByteBuffer)
       println("External Worker receive task: " + taskDescription.taskId)
-      val tr = new TaskRunner(workerEndPoint.dispatcher, workerEndPoint.conf, taskDescription)
+      val tr = new TaskRunner(workerEndPoint.driver, workerEndPoint.dispatcher, workerEndPoint.conf, taskDescription)
       tr.run()
   }
 
