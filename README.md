@@ -1,6 +1,10 @@
 # Spark-Proxy
-Spark-Proxy supports push-based calculation for `Spark` job via aop. It can intercept launch task messages in Spark's driver, re-dispatch them to external executors which have been registered in register center (simply use Redis now).
-<br><br>
+[![Field Badge](https://img.shields.io/badge/Distributed%20Computing-pink.svg)](mailto:wangweirao16@gmail.com)
+[![Field Badge](https://img.shields.io/badge/Volunteer%20Computing-purple.svg)](mailto:wangweirao16@gmail.com)
+
+Spark-Proxy supports push-based calculation for `Spark` job via aop. It can intercept launch task messages in Spark's driver, send them to external `Dispatcher` which have been registered in register center (simply use Redis now), `Dispatcher` maintains connection with external `Worker`, tasks will be finally executed on external `Worker`. It's just a demo now, and has much room for improvement.
+### ALWAYS WORK IN PROGRESS : )
+<br>
 
 ## Code Structure
 
@@ -13,6 +17,7 @@ Spark-Proxy supports push-based calculation for `Spark` job via aop. It can inte
 `Dispatcher/src/main/java/org/apache/spark/java/dispatcher/Dispatcher.java`
 
 **Remote Worker**
+
 `Worker/src/main/java/org/apache/spark/worker/Worker.java`
 <br><br>
 
@@ -96,24 +101,28 @@ mvn clean scala:compile compile package
     
 <br>
 
-## Futurn Plan
+## Futurn Plan (unordered)
 
-1. Support auto-fetching JAR files. 
+- [ ] Add launch script or Launcher, make it automatically.
 
-2. Validate correctness in shuffle task.
+- [ ] Try to figure out better scheduler strategy, which have to support task graph generation (research work).
 
-3. Synchronize re-dispatch info with Driver.
+- [ ] Worker selector.
 
-4. External worker can be aware of and register to new driver automatically. 
+- [ ] Support auto-fetching JAR files. 
 
-5. Support task graph generation.
+- [ ] Validate correctness in shuffle task (security issue). 
 
-6. Support whole life cycle management of external executor (start, stop, listening).
+- [ ] Synchronize re-dispatch info with Driver.
 
-7. Support `IndirectTaskResult`.
+- [ ] External worker can be aware of and register to new driver automatically. 
 
-8. Support metrics report.
+- [ ] Support whole life cycle management of external executor (start, stop, listening).
 
-9. Package external worker, and support dynamically edit properties such as application and rss jar path. 
+- [ ] Support `IndirectTaskResult`.
+
+- [ ] Support metrics report.
+
+- [ ] Package external worker, and support dynamically edit properties such as application and rss jar path. 
 
     
