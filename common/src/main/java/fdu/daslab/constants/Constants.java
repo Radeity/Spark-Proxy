@@ -27,6 +27,8 @@ public class Constants {
 
     public static final String REDIS_PASSWORD = "redis.password";
 
+    public static final String HOST_SELECTOR = "host.selector";
+
     public static final String COMMON_PROPERTIES_PATH = "/common.properties";
 
 }

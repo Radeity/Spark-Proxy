@@ -1,13 +1,15 @@
 package org.apache.spark.dispatcher
 
-import org.apache.spark.java.dispatcher.DispatcherEndpoint
+import fdu.daslab.constants.Constants.{COMMON_PROPERTIES_PATH, HOST_SELECTOR}
+import org.apache.spark.java.dispatcher.host.RandomSelector
 import org.apache.spark.SparkEnv
 import org.apache.spark.java.dispatcher.{DispatcherConstants, DispatcherEndpoint}
-import org.apache.spark.scheduler.TaskDescription
-import org.slf4j.{Logger, LoggerFactory}
 import org.apache.spark.message.ExtraMessages.LaunchRemoteTask
 import org.apache.spark.rpc.RpcEndpointRef
+import org.apache.spark.scheduler.TaskDescription
 import org.apache.spark.util.SerializableBuffer
+import org.slf4j.{Logger, LoggerFactory}
+import fdu.daslab.utils.PropertyUtils
 
 /**
  * @author Aaron Wang
@@ -24,6 +26,16 @@ class TaskDispatcher(
 
   executorEnv.blockManager.initialize(dispatcherEndpoint.conf.getAppId)
 
+
+  val hostSelector = PropertyUtils.getValue(HOST_SELECTOR, COMMON_PROPERTIES_PATH) match {
+    case "RANDOM" =>
+      new RandomSelector()
+
+    // TODO: add other host selectors
+    case _ =>
+      new RandomSelector()
+  }
+
   def receiveTask(taskDescription: TaskDescription): Unit = {
     taskPool.addTask(taskDescription)
   }
@@ -36,13 +48,8 @@ class TaskDispatcher(
       logger.info("Dispatch single task")
       // poll and run one task
       val taskDescription = taskPool.pollTask.getTaskDescription
-      // TODO: Host selector
-      dispatcherEndpoint.executorMap.keySet().forEach(
-        key => {
-          val targetWorker: RpcEndpointRef = dispatcherEndpoint.executorMap.get(key)
-          targetWorker.send(LaunchRemoteTask(new SerializableBuffer(TaskDescription.encode(taskDescription))))
-        }
-      )
+      val targetWorker = hostSelector.select(dispatcherEndpoint.executorMap.values())
+      targetWorker.send(LaunchRemoteTask(new SerializableBuffer(TaskDescription.encode(taskDescription))))
     }
   }
 

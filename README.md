@@ -66,7 +66,8 @@ mvn clean scala:compile compile package
 |--|--|--|
 |reschedule.dst.executor|external|The default value means that re-scheduler each tasks to external workers. If you don't want to re-schedule, set this value to internal|
 |redis.host|(none)|Redis instance host, used to connect to redis(registry center).|
-|redis.password |(none)|Redis instance password, used to connect to redis(registry center).|
+|redis.password|(none)|Redis instance password, used to connect to redis(registry center).|
+|host.selector|RANDOM|The strategy to select Worker, now support random selector only.|
 <br>
 
 **Submit application:**
@@ -107,7 +108,9 @@ mvn clean scala:compile compile package
 
 - [ ] Try to figure out better scheduler strategy, which have to support task graph generation (research work).
 
-- [ ] Worker selector.
+- [ ] Maintain different spark config for different Spark application, set different config and create different `SparkEnv` in Worker
+
+- [x] Worker selector.
 
 - [ ] Support auto-fetching JAR files. 
 

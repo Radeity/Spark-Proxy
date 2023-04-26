@@ -2,6 +2,7 @@ package fdu.daslab;
 
 import fdu.daslab.registry.RedisRegistry;
 import fdu.daslab.utils.SerializeUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
 
@@ -28,6 +29,7 @@ public class RegisterTest {
         }
     }
 
+    @Ignore
     @Test
     public void testReadRedis() throws IOException, ClassNotFoundException {
         Jedis redisClientInstance = RedisRegistry.getRedisClientInstance();
@@ -37,11 +39,6 @@ public class RegisterTest {
 //        byte[] bytes = redisClientInstance.get("executor-16".getBytes());
         ExecutorEndpointRefInfo deserialize = (ExecutorEndpointRefInfo) SerializeUtils.deserialize(bytes);
         System.out.println(deserialize.execId);
-    }
-
-    @Test
-    public void testPrintResult() {
-
     }
 
 }

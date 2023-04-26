@@ -84,6 +84,7 @@ public class WorkerEndPoint implements IsolatedRpcEndpoint {
         });
         conf.set(WorkerConstants.EXECUTOR, WorkerConstants.DEFAULT_EXECUTOR_ID);
 
+        // TODO: consider scenario that Dispatcher is alive, but no running Spark task, get driver URL will time-out
         String driverURL = (String) dispatcher.askSync(new GetDriver(), ClassTag$.MODULE$.apply(String.class));
         driver = rpcEnv().setupEndpointRefByURI(driverURL);
         logger.info("Successfully get Driver {}", driver.address());

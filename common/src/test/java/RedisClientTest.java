@@ -1,10 +1,8 @@
 import fdu.daslab.registry.RedisRegistry;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
-
-import java.util.HashMap;
-import java.util.Random;
 
 import static fdu.daslab.constants.Constants.driverURLKey;
 
@@ -16,6 +14,7 @@ import static fdu.daslab.constants.Constants.driverURLKey;
 public class RedisClientTest {
     private static final String driverURL = "analysis-5:0000";
 
+    @Ignore
     @Test
     public void redisClientTest() {
         Jedis redisClient = RedisRegistry.getRedisClientInstance();

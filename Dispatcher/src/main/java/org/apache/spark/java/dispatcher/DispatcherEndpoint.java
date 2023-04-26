@@ -101,12 +101,13 @@ public class DispatcherEndpoint implements IsolatedRpcEndpoint {
         logger.info("Successfully connect to Driver {}", driver.address());
 
         logger.info("Dispatcher retrieve Spark app Config ...");
+        // TODO: maintain different spark config for different Spark application, set different config and create different SparkEnv in Worker
         cfg = (SparkAppConfig) driver.askSync(new RetrieveSparkAppConfig(0), ClassTag$.MODULE$.apply(SparkAppConfig.class));
 
         // can receive sync conf request from external Worker now.
         syncConfDone = true;
 
-        Seq<Tuple2<String, String>>props = cfg.sparkProperties();
+        Seq<Tuple2<String, String>> props = cfg.sparkProperties();
         props.foreach(prop -> {
             logger.info("Set executor conf : {} = {}", prop._1, prop._2);
             if (SparkConf.isExecutorStartupConf(prop._1)) {
