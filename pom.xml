@@ -15,7 +15,7 @@
         <module>Worker</module>
     </modules>
 
-    <name>Aop2YarnClient</name>
+    <name>Spark-Proxy</name>
     <description>spark agent for push-out computation</description>
 
     <properties>
@@ -65,14 +65,13 @@
         </pluginManagement>
 
         <plugins>
-            <!-- 该插件用于将 Scala 代码编译成 class 文件 -->
+            <!-- compile scala code to class file -->
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
                 <version>3.2.2</version>
                 <executions>
                     <execution>
-                        <!-- 声明绑定到 maven 的 compile 阶段 -->
                         <goals>
                             <goal>testCompile</goal>
                         </goals>
