@@ -8,8 +8,7 @@ Spark-Proxy supports push-based calculation for `Spark` job via aop. It can inte
 
 ## System Design
 
-<img width="1389" alt="image" src="https://user-images.githubusercontent.com/45198818/235077713-6c5a75fa-f576-4fbe-b40e-4bd90407eeda.png">
-
+<img width="1382" alt="image" src="https://user-images.githubusercontent.com/45198818/235079647-b4daba87-8504-4bab-82bd-8ebf48ba5bfd.png">
 
 ## Code Structure
 
