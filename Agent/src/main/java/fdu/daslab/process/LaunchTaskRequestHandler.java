@@ -50,6 +50,8 @@ public class LaunchTaskRequestHandler implements MessageRequestHandler {
         logger.info(". . . . . . . . . Dispatching Task{}, Executor:{}, Partition:{}, JAR size:{}, Archive size:{}",
                 decode.taskId(), oriExecutorEndpointRef, decode.partitionId(), decode.addedJars().size(), decode.addedFiles().size());
 
+        // If newExecutorEndpointRef = null, degrade dispatch tasks to nodes within the cluster.
+        // It happens because there's no registered external Dispatcher when task launching. When new Dispatcher register later, task will be re-dispatched normally.
         // TODO: Synchronize re-dispatch info with Driver
         if (newExecutorEndpointRef != null) {
             newMessage = new RequestMessage(message.senderAddress(), newExecutorEndpointRef.executorEndpointRef, message.content());

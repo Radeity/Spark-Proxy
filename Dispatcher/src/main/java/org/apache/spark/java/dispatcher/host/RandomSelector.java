@@ -16,8 +16,12 @@ public class RandomSelector extends AbstractSelector<RpcEndpointRef> {
 
     @Override
     public RpcEndpointRef select(Collection<RpcEndpointRef> workerSet) {
-        List<RpcEndpointRef> hosts = new ArrayList<>(workerSet);
-        int idx = ThreadLocalRandom.current().nextInt(hosts.size());
-        return hosts.get(idx);
+        try {
+            List<RpcEndpointRef> hosts = new ArrayList<>(workerSet);
+            int idx = ThreadLocalRandom.current().nextInt(hosts.size());
+            return hosts.get(idx);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
     }
 }

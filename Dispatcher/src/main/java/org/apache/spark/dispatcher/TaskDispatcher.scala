@@ -22,9 +22,9 @@ class TaskDispatcher(
 
   protected val logger: Logger = LoggerFactory.getLogger(classOf[TaskDispatcher])
 
-  val executorEnv = SparkEnv.createExecutorEnv(dispatcherEndpoint.conf, DispatcherConstants.DEFAULT_EXECUTOR_ID, DispatcherConstants.bindAddress, DispatcherConstants.bindAddress, 1, dispatcherEndpoint.cfg.ioEncryptionKey, false)
+//  val executorEnv = SparkEnv.createExecutorEnv(dispatcherEndpoint.conf, DispatcherConstants.DEFAULT_EXECUTOR_ID, DispatcherConstants.bindAddress, DispatcherConstants.bindAddress, 1, dispatcherEndpoint.cfg.ioEncryptionKey, false)
 
-  executorEnv.blockManager.initialize(dispatcherEndpoint.conf.getAppId)
+//  executorEnv.blockManager.initialize(dispatcherEndpoint.conf.getAppId)
 
 
   val hostSelector = PropertyUtils.getValue(HOST_SELECTOR, COMMON_PROPERTIES_PATH) match {
@@ -46,10 +46,12 @@ class TaskDispatcher(
     val actualBatchNum: Int = math.min(taskPool.getWaitingTaskSize, batchNum)
     for (_ <- 0 until actualBatchNum) {
       logger.info("Dispatch single task")
-      // poll and run one task
-      val taskDescription = taskPool.pollTask.getTaskDescription
       val targetWorker = hostSelector.select(dispatcherEndpoint.executorMap.values())
-      targetWorker.send(LaunchRemoteTask(new SerializableBuffer(TaskDescription.encode(taskDescription))))
+      // poll and run one task
+      if (targetWorker != null) {
+        val taskDescription = taskPool.pollTask.getTaskDescription
+        targetWorker.send(LaunchRemoteTask(new SerializableBuffer(TaskDescription.encode(taskDescription))))
+      } else {}
     }
   }
 

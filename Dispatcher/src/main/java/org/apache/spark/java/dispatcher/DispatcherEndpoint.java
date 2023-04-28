@@ -76,7 +76,7 @@ public class DispatcherEndpoint implements IsolatedRpcEndpoint {
     public void onStart() {
         logger.info("Starting Dispatcher server ...");
         Jedis redisClient = RedisRegistry.getRedisClientInstance();
-        redisClient.del(driverURLKey);
+//        redisClient.del(driverURLKey);
         while (driverURL == null) {
             driverURL = redisClient.get(driverURLKey);
             try {

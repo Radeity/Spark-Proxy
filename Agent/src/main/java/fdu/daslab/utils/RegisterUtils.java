@@ -76,24 +76,30 @@ public class RegisterUtils {
         Random r = new Random();
 
         r.setSeed(new Date().getTime());
-        if (inClusterFlag) {
-            int i = r.nextInt(executorDataMap.size());
-            while (executorIndex.get(i).equals(oriKey)) {
-                i = r.nextInt(executorDataMap.size());
+        try {
+            if (inClusterFlag) {
+                int i = r.nextInt(executorDataMap.size());
+                while (executorIndex.get(i).equals(oriKey)) {
+                    i = r.nextInt(executorDataMap.size());
+                }
+                // randomly choose new executor
+                executorEndpointRefInfo = executorDataMap.get(executorIndex.get(i));
+            } else {
+                Jedis redisClient = RedisRegistry.getRedisClientInstance();
+                int i = r.nextInt(externalExecutorIndex.size());
+                byte[] bytes = redisClient.get(externalExecutorIndex.get(i).getBytes());
+                try {
+                    executorEndpointRefInfo = (ExecutorEndpointRefInfo) SerializeUtils.deserialize(bytes);
+                } catch (Exception e) {
+                    logger.error("Can not deserialize external executor's EndPointRef, dispatch to in-cluster executor");
+                    executorEndpointRefInfo = getNewExecutorEndpointRef(oriKey, true);
+                }
             }
-            // randomly choose new executor
-            executorEndpointRefInfo = executorDataMap.get(executorIndex.get(i));
-        } else {
-            Jedis redisClient = RedisRegistry.getRedisClientInstance();
-            int i = r.nextInt(externalExecutorIndex.size());
-            byte[] bytes = redisClient.get(externalExecutorIndex.get(i).getBytes());
-            try {
-                executorEndpointRefInfo = (ExecutorEndpointRefInfo) SerializeUtils.deserialize(bytes);
-            } catch (Exception e) {
-                logger.error("Can not deserialize external executor's EndPointRef, dispatch to in-cluster executor");
-                executorEndpointRefInfo = getNewExecutorEndpointRef(oriKey, true);
-            }
+        } catch (Exception e) {
+            logger.error("Get NewExecutorEndpointRef error, inClusterFlag: {}, internal nodes: {}, external nodes: {}", inClusterFlag, executorDataMap.size(), externalExecutorIndex.size());
+            executorEndpointRefInfo = null;
         }
+
         return executorEndpointRefInfo;
     }
 }
