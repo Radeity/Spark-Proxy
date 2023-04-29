@@ -1,8 +1,7 @@
 package org.apache.spark.dispatcher
 
-import org.apache.spark.java.dispatcher.scheduler.CustomizedSchedulingAlgorithm
 import org.apache.spark.java.dispatcher.scheduler.{CustomizedSchedulingAlgorithm, FIFOSchedulingAlgorithm, SchedulingStrategy}
-import org.apache.spark.scheduler.TaskDescription
+import org.apache.spark.java.dispatcher.wrapper.WrappedTaskDescription
 
 import java.util.concurrent.PriorityBlockingQueue
 import java.util.concurrent.atomic.AtomicInteger
@@ -28,13 +27,17 @@ class TaskPool(schedulingStrategy: SchedulingStrategy) {
 
   private val id: AtomicInteger = new AtomicInteger(0)
 
-  def addTask(task: TaskDescription): Unit = {
+  def addTask(task: WrappedTaskDescription): Unit = {
     val wrappedTask = new WrappedTask(id.incrementAndGet, 0, task)
     taskQueues.add(wrappedTask)
   }
 
-  def pollTask: WrappedTask = { //        List<WrappedTask> sortedTasks = taskQueues.stream().sorted(schedulingAlgorithm);
+  def pollTask: WrappedTask = {
     taskQueues.poll
+  }
+
+  def peekTask: WrappedTask = {
+    taskQueues.peek()
   }
 
   def getWaitingTaskSize: Int = taskQueues.size

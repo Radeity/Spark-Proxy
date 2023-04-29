@@ -1,5 +1,6 @@
 package org.apache.spark.message
 
+import org.apache.spark.rpc.RpcEndpointRef
 import org.apache.spark.util.SerializableBuffer
 
 /**
@@ -11,7 +12,11 @@ object ExtraMessages {
 
   case class GetDriver()
 
-  case class LaunchRemoteTask(data: SerializableBuffer)
+  case class LaunchRemoteTask(driverURL: String, data: SerializableBuffer)
+
+  case class RetrieveApplicationContext(driverURL: String)
+
+  case class WrappedMessage(driverHost: String, content: Any)
 
 }
 

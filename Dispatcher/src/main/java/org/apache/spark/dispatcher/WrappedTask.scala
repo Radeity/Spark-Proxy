@@ -1,6 +1,6 @@
 package org.apache.spark.dispatcher
 
-import org.apache.spark.scheduler.TaskDescription
+import org.apache.spark.java.dispatcher.wrapper.WrappedTaskDescription
 
 /**
  * @author Aaron Wang
@@ -10,7 +10,7 @@ import org.apache.spark.scheduler.TaskDescription
 class WrappedTask(
                    id: Int,
                    priority: Int,
-                   taskDescription: TaskDescription) {
+                   wrappedTaskDescription: WrappedTaskDescription) {
 
   // TODO: replace getter method
   def getId(): Int = {
@@ -21,8 +21,8 @@ class WrappedTask(
     priority
   }
 
-  def getTaskDescription: TaskDescription = {
-    taskDescription
+  def getWrappedTaskDescription: WrappedTaskDescription = {
+    wrappedTaskDescription
   }
 
 }

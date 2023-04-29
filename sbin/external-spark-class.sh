@@ -18,6 +18,7 @@ fi
 set +o posix
 CMD=()
 CMD+=("$RUNNER")
+CMD+=("-javaagent:/home/workflow/external-spark/jars/aspectjweaver-1.9.6.jar")
 CMD+=("-cp")
 CMD+=("$EXTERNAL_SPARK_CLASS_PATH")
 CMD=(${CMD[@]} "$@")

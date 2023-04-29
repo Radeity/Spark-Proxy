@@ -1,19 +1,22 @@
 package org.apache.spark.java.dispatcher;
 
-import org.apache.spark.java.dispatcher.scheduler.SchedulingStrategy;
+import fdu.daslab.ExecutorEndpointRefInfo;
 import fdu.daslab.registry.RedisRegistry;
-import org.apache.spark.dispatcher.ReplyReceiver;
-import org.apache.spark.dispatcher.TaskPool;
-import org.apache.spark.dispatcher.Receiver;
+import fdu.daslab.utils.SerializeUtils;
+import org.apache.spark.ExternalApplicationContext;
 import org.apache.spark.SparkConf;
+import org.apache.spark.SecurityManager;
+import org.apache.spark.dispatcher.Receiver;
+import org.apache.spark.dispatcher.ReplyReceiver;
 import org.apache.spark.dispatcher.TaskDispatcher;
-import org.apache.spark.resource.ResourceInformation;
+import org.apache.spark.dispatcher.TaskPool;
+import org.apache.spark.java.dispatcher.scheduler.SchedulingStrategy;
 import org.apache.spark.rpc.IsolatedRpcEndpoint;
 import org.apache.spark.rpc.RpcAddress;
 import org.apache.spark.rpc.RpcCallContext;
 import org.apache.spark.rpc.RpcEndpointRef;
 import org.apache.spark.rpc.RpcEnv;
-import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.RegisterExecutor;
+import org.apache.spark.rpc.netty.NettyRpcEndpointRef;
 import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.RetrieveSparkAppConfig;
 import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.SparkAppConfig;
 import org.slf4j.Logger;
@@ -21,16 +24,17 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import scala.PartialFunction;
 import scala.Tuple2;
-import scala.collection.Seq;
-import scala.collection.immutable.Map;
+import scala.collection.immutable.List;
 import scala.reflect.ClassTag$;
 import scala.runtime.BoxedUnit;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.HashMap;
 
-import static fdu.daslab.constants.Constants.driverURLKey;
+import static fdu.daslab.constants.Constants.executorEndpointRefKey;
+import static fdu.daslab.constants.Constants.executorSystemName;
 
 /**
  * @author Aaron Wang
@@ -45,46 +49,61 @@ public class DispatcherEndpoint implements IsolatedRpcEndpoint {
 
     public SparkConf conf;
 
-    public boolean syncConfDone = false;
-
     public Receiver receiver;
 
     public ReplyReceiver replyReceiver;
 
     public TaskDispatcher taskDispatcher;
 
-    public RpcEndpointRef driver;
-
-    public String driverURL = null;
-
-    public SparkAppConfig cfg;
-
     public HashMap<String, RpcEndpointRef> executorMap;
 
-    public DispatcherEndpoint(RpcEnv rpcEnv, SparkConf conf) {
-        this.rpcEnv = rpcEnv;
+    public HashMap<String, String> workerApplicationMap;
+
+    // TODO: Memory leak risk, should be fixed in the future, add remove operation
+    // key = `driverURL`
+    public HashMap<String, ExternalApplicationContext> applicationContextMap;
+
+    public DispatcherEndpoint(SparkConf conf) {
         this.conf = conf;
         this.executorMap = new HashMap<>();
+        this.workerApplicationMap = new HashMap<>();
+        this.applicationContextMap = new HashMap<>();
+
+        run();
     }
 
-    @Override
-    public RpcEnv rpcEnv() {
-        return this.rpcEnv;
+    public void run() {
+        TaskPool taskPool = new TaskPool(SchedulingStrategy.FIFO);
+
+        taskDispatcher = new TaskDispatcher(this, taskPool, new scala.collection.mutable.HashMap<>());
+
+        rpcEnv = RpcEnv.create(executorSystemName,
+                DispatcherConstants.bindAddress,
+                DispatcherConstants.bindAddress,
+                16161,
+                this.conf,
+                new SecurityManager(conf, null, null),
+                0,
+                false);
+
+        receiver = new Receiver(this);
+        replyReceiver = new ReplyReceiver(this);
+
+        System.out.println(rpcEnv.address());
+
+        rpcEnv.setupEndpoint("Dispatcher", this);
+
+        // TODO: Send onStop message to stop executor
+        rpcEnv.awaitTermination();
     }
 
-    @Override
-    public void onStart() {
-        logger.info("Starting Dispatcher server ...");
-        Jedis redisClient = RedisRegistry.getRedisClientInstance();
-//        redisClient.del(driverURLKey);
-        while (driverURL == null) {
-            driverURL = redisClient.get(driverURLKey);
-            try {
-                Thread.sleep(20);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+    /**
+     * Request and save ExternalApplicationContext for each Application(Driver)
+     *
+     * @param driverURL
+     */
+    public void receiveNewApplication(String driverURL) {
+        RpcEndpointRef driver = null;
         int nTries = 0;
         while (driver == null && nTries < 3) {
             try {
@@ -101,13 +120,13 @@ public class DispatcherEndpoint implements IsolatedRpcEndpoint {
         logger.info("Successfully connect to Driver {}", driver.address());
 
         logger.info("Dispatcher retrieve Spark app Config ...");
-        // TODO: maintain different spark config for different Spark application, set different config and create different SparkEnv in Worker
-        cfg = (SparkAppConfig) driver.askSync(new RetrieveSparkAppConfig(0), ClassTag$.MODULE$.apply(SparkAppConfig.class));
 
-        // can receive sync conf request from external Worker now.
-        syncConfDone = true;
+        SparkAppConfig cfg = (SparkAppConfig) driver.askSync(new RetrieveSparkAppConfig(0), ClassTag$.MODULE$.apply(SparkAppConfig.class));
 
-        Seq<Tuple2<String, String>> props = cfg.sparkProperties();
+        SparkConf conf = new SparkConf();
+
+        List<Tuple2<String, String>> props = cfg.sparkProperties().toList();
+
         props.foreach(prop -> {
             logger.info("Set executor conf : {} = {}", prop._1, prop._2);
             if (SparkConf.isExecutorStartupConf(prop._1)) {
@@ -119,18 +138,31 @@ public class DispatcherEndpoint implements IsolatedRpcEndpoint {
         });
         conf.set(DispatcherConstants.EXECUTOR, DispatcherConstants.DEFAULT_EXECUTOR_ID);
 
-        Map<String, String> emptyMap = new scala.collection.immutable.HashMap<>();
-        Map<String, ResourceInformation> emptyResourceInformationMap = new scala.collection.immutable.HashMap<>();
+        ExternalApplicationContext externalApplicationContext = new ExternalApplicationContext(conf, driver, cfg);
+        applicationContextMap.put(driverURL, externalApplicationContext);
+    }
 
-        // TODO: Executor directly register to Dispatcher is better
-        driver.ask(new RegisterExecutor(DispatcherConstants.DEFAULT_EXECUTOR_ID, self(), DispatcherConstants.bindAddress, 1, emptyMap, emptyMap, emptyResourceInformationMap, 0), ClassTag$.MODULE$.apply(Boolean.class));
+    @Override
+    public RpcEnv rpcEnv() {
+        return this.rpcEnv;
+    }
 
-        TaskPool taskPool = new TaskPool(SchedulingStrategy.FIFO);
+    @Override
+    public void onStart() {
+        logger.info("Starting Dispatcher server ...");
 
-        taskDispatcher = new TaskDispatcher(this, taskPool);
+        Jedis redisClient = RedisRegistry.getRedisClientInstance();
 
-        receiver = new Receiver(this);
-        replyReceiver = new ReplyReceiver(this);
+        // Register Dispatcher
+        try {
+            String key = String.format(executorEndpointRefKey, DispatcherConstants.DEFAULT_EXECUTOR_ID);
+            RpcEndpointRef self = self();
+            ExecutorEndpointRefInfo executorEndpointRefInfo = new ExecutorEndpointRefInfo((NettyRpcEndpointRef) self, DispatcherConstants.DEFAULT_EXECUTOR_ID);
+            byte[] value = SerializeUtils.serialize(executorEndpointRefInfo);
+            redisClient.set(key.getBytes(), value);
+        } catch (IOException e) {
+            logger.error("Register external Dispatcher error", e);
+        }
 
         MocDispatchTaskCaller mocDispatchTaskCaller = new MocDispatchTaskCaller(taskDispatcher);
         mocDispatchTaskCaller.startDispatchTask();

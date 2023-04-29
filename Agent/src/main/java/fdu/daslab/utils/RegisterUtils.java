@@ -8,6 +8,8 @@ import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.params.ScanParams;
+import redis.clients.jedis.resps.ScanResult;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,6 +29,15 @@ import static fdu.daslab.constants.Constants.executorEndpointRefKey;
 public class RegisterUtils {
 
     protected static final Logger logger = LoggerFactory.getLogger(RegisterUtils.class);
+
+    public static ScanParams scanParams;
+    static {
+        scanParams = new ScanParams();
+        scanParams.match("executor*");
+        scanParams.count(1000);
+    }
+
+    public static String cursor = ScanParams.SCAN_POINTER_START;
 
     public static Map<String, ExecutorEndpointRefInfo> executorDataMap = new HashMap<>();
 
@@ -58,7 +69,7 @@ public class RegisterUtils {
                 byte[] value = SerializeUtils.serialize(executorEndpointRefInfo);
                 redisClient.set(key.getBytes(), value);
             } catch (IOException e) {
-                logger.error("Register external executor error", e);
+                logger.error("Register external Dispatcher error", e);
             }
         }
     }
@@ -86,8 +97,16 @@ public class RegisterUtils {
                 executorEndpointRefInfo = executorDataMap.get(executorIndex.get(i));
             } else {
                 Jedis redisClient = RedisRegistry.getRedisClientInstance();
-                int i = r.nextInt(externalExecutorIndex.size());
-                byte[] bytes = redisClient.get(externalExecutorIndex.get(i).getBytes());
+//                int i = r.nextInt(externalExecutorIndex.size());
+
+                // TODO: need improvement, scan all records every time, inefficient
+                ScanResult<String> scan = redisClient.scan(cursor, scanParams);
+                cursor = scan.getCursor();
+                List<String> result = scan.getResult();
+                int i = r.nextInt(result.size());
+                String key = scan.getResult().get(i);
+                byte[] bytes = redisClient.get(key.getBytes());
+//                byte[] bytes = redisClient.get(externalExecutorIndex.get(i).getBytes());
                 try {
                     executorEndpointRefInfo = (ExecutorEndpointRefInfo) SerializeUtils.deserialize(bytes);
                 } catch (Exception e) {

@@ -49,7 +49,7 @@ public class DispatcherTest {
                 0,
                 false);
 
-        DispatcherEndpoint dispatcherEndpoint = new DispatcherEndpoint(executorRpcEnv, executorConf);
+        DispatcherEndpoint dispatcherEndpoint = new DispatcherEndpoint(executorConf);
 
         dispatcherEndpoint.receiver = new Receiver(null);
         executorRpcEnv.setupEndpoint("Dispatcher", dispatcherEndpoint);
