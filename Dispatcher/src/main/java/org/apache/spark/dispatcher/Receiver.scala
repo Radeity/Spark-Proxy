@@ -28,10 +28,7 @@ class Receiver(dispatcherEndpoint: DispatcherEndpoint) {
       message match {
         case LaunchTask(data) =>
           println("Receive new task: " + data)
-          // TODO: No need to serialize and deserialize taskDescription in Dispatcher
-          val newByteBuffer: ByteBuffer = data.value.duplicate
-          val taskDescription: TaskDescription = TaskDescription.decode(newByteBuffer)
-          dispatcherEndpoint.taskDispatcher.receiveTask(new WrappedTaskDescription(taskDescription, driverURL))
+          dispatcherEndpoint.taskDispatcher.receiveTask(new WrappedTaskDescription(data, driverURL))
 
         case StatusUpdate(executorId, taskId, state, data, resources) =>
           driver.send(StatusUpdate(executorId, taskId, state, data, resources))

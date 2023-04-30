@@ -1,7 +1,6 @@
 package org.apache.spark.java.dispatcher.wrapper;
 
-import org.apache.spark.rpc.RpcEndpointRef;
-import org.apache.spark.scheduler.TaskDescription;
+import org.apache.spark.util.SerializableBuffer;
 
 /**
  * @author Aaron Wang
@@ -10,16 +9,16 @@ import org.apache.spark.scheduler.TaskDescription;
  */
 public class WrappedTaskDescription {
 
-    private TaskDescription taskDescription;
+    private SerializableBuffer taskDescription;
 
     private String driverURL;
 
-    public WrappedTaskDescription(TaskDescription taskDescription, String driverURL) {
+    public WrappedTaskDescription(SerializableBuffer taskDescription, String driverURL) {
         this.taskDescription = taskDescription;
         this.driverURL = driverURL;
     }
 
-    public TaskDescription getTaskDescription() {
+    public SerializableBuffer getTaskDescription() {
         return taskDescription;
     }
 

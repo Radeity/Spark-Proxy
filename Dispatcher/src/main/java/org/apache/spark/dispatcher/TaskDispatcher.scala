@@ -67,7 +67,7 @@ class TaskDispatcher(
       // poll and run one task
       if (targetWorker != null) {
         val wrappedTaskDescription = taskPool.pollTask.getWrappedTaskDescription
-        targetWorker.send(LaunchRemoteTask(wrappedTaskDescription.getDriverURL, new SerializableBuffer(TaskDescription.encode(wrappedTaskDescription.getTaskDescription))))
+        targetWorker.send(LaunchRemoteTask(wrappedTaskDescription.getDriverURL, wrappedTaskDescription.getTaskDescription))
         logger.info("Send task to target worker {}", targetWorker.address)
         logger.info("Driver of this task: {}", wrappedTaskDescription.getDriverURL)
       } else {}
