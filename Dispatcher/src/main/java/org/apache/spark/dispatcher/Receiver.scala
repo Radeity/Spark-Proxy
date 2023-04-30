@@ -1,15 +1,11 @@
 package org.apache.spark.dispatcher
 
-import org.apache.spark.{SparkContext, SparkEnv}
 import org.apache.spark.java.dispatcher.DispatcherEndpoint
-import org.apache.spark.scheduler.TaskDescription
-import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.{LaunchTask, LaunchedExecutor, StatusUpdate}
+import org.apache.spark.java.dispatcher.wrapper.WrappedTaskDescription
 import org.apache.spark.message.ExtraMessages.WrappedMessage
 import org.apache.spark.rpc.RpcEndpointRef
-import org.apache.spark.java.dispatcher.wrapper.WrappedTaskDescription
-import org.apache.spark.scheduler.LiveListenerBus
-import org.apache.spark.java.dispatcher.DispatcherConstants.DEFAULT_EXECUTOR_ID
-import org.apache.spark.java.dispatcher.DispatcherConstants.bindAddress
+import org.apache.spark.scheduler.TaskDescription
+import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.{LaunchTask, StatusUpdate}
 
 import java.nio.ByteBuffer
 
@@ -19,16 +15,6 @@ import java.nio.ByteBuffer
  * @version 1.0
  */
 class Receiver(dispatcherEndpoint: DispatcherEndpoint) {
-
-//  val executorEnv = SparkEnv.createExecutorEnv(
-//    dispatcherEndpoint.conf,
-//    DEFAULT_EXECUTOR_ID,
-//    bindAddress,
-//    bindAddress,
-//    // TODO: make numCores configurable
-//    1,
-//    None,
-//    false)
 
   def receive: PartialFunction[Any, Unit] = {
     case WrappedMessage(driverURL: String, message: Any) =>

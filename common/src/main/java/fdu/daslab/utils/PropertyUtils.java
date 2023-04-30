@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import static fdu.daslab.constants.Constants.RESCHEDULE_STRATEGY;
-
 /**
  * @author Aaron Wang
  * @version 1.0

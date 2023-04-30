@@ -2,6 +2,7 @@ package org.apache.spark.java.dispatcher;
 
 import fdu.daslab.ExecutorEndpointRefInfo;
 import fdu.daslab.registry.RedisRegistry;
+import fdu.daslab.utils.PropertyUtils;
 import fdu.daslab.utils.SerializeUtils;
 import org.apache.spark.ExternalApplicationContext;
 import org.apache.spark.SparkConf;
@@ -29,12 +30,16 @@ import scala.reflect.ClassTag$;
 import scala.runtime.BoxedUnit;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static fdu.daslab.constants.Constants.executorEndpointRefKey;
 import static fdu.daslab.constants.Constants.executorSystemName;
+import static fdu.daslab.constants.Constants.DISPATCHER_PORT;
+import static fdu.daslab.constants.Constants.COMMON_PROPERTIES_PATH;
 
 /**
  * @author Aaron Wang
@@ -59,6 +64,8 @@ public class DispatcherEndpoint implements IsolatedRpcEndpoint {
 
     public HashMap<String, String> workerApplicationMap;
 
+    public int dispatcherPort;
+
     // TODO: Memory leak risk, should be fixed in the future, add remove operation
     // key = `driverURL`
     public HashMap<String, ExternalApplicationContext> applicationContextMap;
@@ -68,8 +75,22 @@ public class DispatcherEndpoint implements IsolatedRpcEndpoint {
         this.executorMap = new HashMap<>();
         this.workerApplicationMap = new HashMap<>();
         this.applicationContextMap = new HashMap<>();
-
+        this.dispatcherPort = Integer.parseInt(PropertyUtils.getValue(DISPATCHER_PORT, COMMON_PROPERTIES_PATH));
+        checkPortAvailable();
         run();
+    }
+
+    /**
+     * If port is in used(unavailable), process directly exit with error code 16.
+     */
+    public void checkPortAvailable() {
+        try (Socket socket = new Socket(InetAddress.getLocalHost(), dispatcherPort)) {
+            logger.error("Port {} is not available", dispatcherPort);
+            // use code 16 to represent port is not available error
+            System.exit(16);
+        } catch (Exception e) {
+            logger.info("Port {} for Dispatcher is available", dispatcherPort);
+        }
     }
 
     public void run() {
@@ -80,7 +101,7 @@ public class DispatcherEndpoint implements IsolatedRpcEndpoint {
         rpcEnv = RpcEnv.create(executorSystemName,
                 DispatcherConstants.bindAddress,
                 DispatcherConstants.bindAddress,
-                16161,
+                this.dispatcherPort,
                 this.conf,
                 new SecurityManager(conf, null, null),
                 0,

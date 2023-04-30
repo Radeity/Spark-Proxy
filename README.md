@@ -115,6 +115,7 @@ Directory tree will be:
 |redis.host|(none)|Redis instance host, used to connect to redis(registry center).|
 |redis.password|(none)|Redis instance password, used to connect to redis(registry center).|
 |host.selector|RANDOM|The strategy to select Worker, now support random selector only.|
+|dispatcher.port|(none)|Launch port of Dispatcher.|
 <br>
 
 **Environment Variable**
@@ -172,7 +173,7 @@ Directory tree will be:
 
 - [ ] Try to figure out better scheduler strategy, which have to support task graph generation (research work).
 
-- [ ] Maintain different spark config for different Spark application, set different config and create different `SparkEnv` in Worker
+- [x] Maintain different spark config for different Spark application, set different config and create different `SparkEnv` in Worker
 
 - [x] Worker selector.
 

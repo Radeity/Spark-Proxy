@@ -1,5 +1,6 @@
 package org.apache.spark.worker;
 
+import fdu.daslab.utils.PropertyUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.executor.Receiver;
 import org.apache.spark.resource.ResourceInformation;
@@ -17,6 +18,10 @@ import scala.collection.immutable.Map;
 import scala.reflect.ClassTag$;
 import scala.runtime.BoxedUnit;
 
+import static fdu.daslab.constants.Constants.dispatcherURLPrefix;
+import static fdu.daslab.constants.Constants.DISPATCHER_PORT;
+import static fdu.daslab.constants.Constants.COMMON_PROPERTIES_PATH;
+
 /**
  * @author Aaron Wang
  * @version 1.0
@@ -30,6 +35,8 @@ public class WorkerEndPoint implements IsolatedRpcEndpoint {
 
     public SparkConf conf;
 
+    public String dispatcherURL;
+
     public RpcEndpointRef dispatcher;
 
     public RpcEndpointRef driver;
@@ -38,10 +45,12 @@ public class WorkerEndPoint implements IsolatedRpcEndpoint {
 
     public java.util.HashSet<String> runningApplication;
 
-    public WorkerEndPoint(RpcEnv rpcEnv, SparkConf conf) {
+    public WorkerEndPoint(RpcEnv rpcEnv, SparkConf conf, String dispatcherHost) {
         this.rpcEnv = rpcEnv;
         this.conf = conf;
         this.runningApplication = new java.util.HashSet<>();
+        this.dispatcherURL = String.format("%s%s:%s",
+                dispatcherURLPrefix, dispatcherHost, PropertyUtils.getValue(DISPATCHER_PORT, COMMON_PROPERTIES_PATH));
     }
 
     @Override
@@ -52,8 +61,7 @@ public class WorkerEndPoint implements IsolatedRpcEndpoint {
     @Override
     public void onStart() {
         logger.info("Starting Worker server ...");
-        // TODO: replace hard-code
-        String dispatcherURL = "spark://Dispatcher@10.176.24.58:16161";
+
         int nTries = 0;
         while (dispatcher == null && nTries < 3) {
             try {

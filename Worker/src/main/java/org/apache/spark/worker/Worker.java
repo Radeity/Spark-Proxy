@@ -13,10 +13,10 @@ import static fdu.daslab.constants.Constants.executorSystemName;
  */
 public class Worker {
     public static void main(String[] args) {
-        run();
+        run(args[0]);
     }
 
-    public static void run() {
+    public static void run(String dispatcherHost) {
         SparkConf executorConf = new SparkConf();
 
         RpcEnv executorRpcEnv = RpcEnv.create(executorSystemName,
@@ -30,7 +30,7 @@ public class Worker {
 
         System.out.println(executorRpcEnv.address());
 
-        WorkerEndPoint workerEndPoint = new WorkerEndPoint(executorRpcEnv, executorConf);
+        WorkerEndPoint workerEndPoint = new WorkerEndPoint(executorRpcEnv, executorConf, dispatcherHost);
 
         executorRpcEnv.setupEndpoint("Worker", workerEndPoint);
 

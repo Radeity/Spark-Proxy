@@ -1,9 +1,9 @@
-import org.apache.spark.java.dispatcher.DispatcherEndpoint;
 import fdu.daslab.registry.RedisRegistry;
 import fdu.daslab.utils.IpUtils;
-import org.apache.spark.dispatcher.Receiver;
 import org.apache.spark.SecurityManager;
 import org.apache.spark.SparkConf;
+import org.apache.spark.dispatcher.Receiver;
+import org.apache.spark.java.dispatcher.DispatcherEndpoint;
 import org.apache.spark.rpc.RpcEndpointRef;
 import org.apache.spark.rpc.RpcEnv;
 import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages;
@@ -17,7 +17,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static fdu.daslab.constants.Constants.driverURLKey;
 import static fdu.daslab.constants.Constants.executorSystemName;
@@ -31,7 +30,7 @@ public class DispatcherTest {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
 
     @Before
-    public void beforeEveryTest(){
+    public void beforeEveryTest() {
         System.setOut(new PrintStream(stdoutStream));
     }
 
