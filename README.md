@@ -123,7 +123,8 @@ Directory tree will be:
 |--|--|
 |EXTERNAL_SPARK_HOME|The HOME of external Spark.|
 |EXTERNAL_SPARK_CONF_DIR|Alternate conf dir. Default is ${EXTERNAL_SPARK_HOME}/conf.|
-|EXTERNAL_SPARK_PID_DIR|The pid files are stored. Default is${EXTERNAL_SPARK_HOME}/tmp.|
+|EXTERNAL_SPARK_PID_DIR|The pid files are stored. Default is ${EXTERNAL_SPARK_HOME}/tmp.|
+|EXTERNAL_SPARK_LOG_MAX_FILES|Max log files of external Spark daemons can rotate to. Default is 5.|
 <br>
 
 **Host File (conf/hosts)**

@@ -4,9 +4,10 @@
 #
 # Environment Variables
 #
-#   EXTERNAL_SPARK_HOME      The HOME of external Spark.
-#   EXTERNAL_SPARK_CONF_DIR  Alternate conf dir. Default is ${EXTERNAL_SPARK_HOME}/conf.
-#   EXTERNAL_SPARK_PID_DIR   The pid files are stored. /tmp by default.
+#   EXTERNAL_SPARK_HOME           The HOME of external Spark.
+#   EXTERNAL_SPARK_CONF_DIR       Alternate conf dir. Default is ${EXTERNAL_SPARK_HOME}/conf.
+#   EXTERNAL_SPARK_PID_DIR        The pid files are stored. /tmp by default.
+#   EXTERNAL_SPARK_LOG_MAX_FILES  Max log files of external Spark daemons can rotate to. Default is 5.
 ##
 
 
@@ -26,6 +27,28 @@ EXTERNAL_SPARK_PID_DIR="${EXTERNAL_SPARK_PID_DIR:-"${EXTERNAL_SPARK_HOME}/tmp"}"
 
 pid="${EXTERNAL_SPARK_PID_DIR}/external-spark-$USER-$command.pid"
 log="${EXTERNAL_SPARK_PID_DIR}/external-spark-$USER-$command.log"
+
+rotate_log() {
+  log=$1
+
+  if [[ -z ${EXTERNAL_SPARK_LOG_MAX_FILES} ]]; then
+    num=5
+  elif [[ ${EXTERNAL_SPARK_LOG_MAX_FILES} -gt 0 ]]; then
+    num=${EXTERNAL_SPARK_LOG_MAX_FILES}
+  else
+    echo "Error: EXTERNAL_SPARK_LOG_MAX_FILES must be a positive number, but got ${EXTERNAL_SPARK_LOG_MAX_FILES}"
+    exit 1
+  fi
+
+  if [ -f "$log" ]; then
+  while [ $num -gt 1 ]; do
+    prev=`expr $num - 1`
+    [ -f $log.$prev ] && mv "$log.$prev" "$log.$num"
+    num=$prev
+  done
+  mv "$log" "$log.$num"
+  fi
+}
 
 exec_command() {
   echo "execute command: $@"
@@ -52,6 +75,9 @@ run_command() {
       exit 1
     fi
   fi
+
+  rotate_log "$log"
+  echo "starting $command, logging to $log"
 
   case "$mode" in
     (class)
