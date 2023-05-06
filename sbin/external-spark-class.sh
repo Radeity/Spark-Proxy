@@ -14,11 +14,13 @@ else
   exit 1
 fi
 
+ASPECTJ_JAR_PATH="${EXTERNAL_SPARK_HOME}/jars/aspectjweaver-1.9.6.jar"
+
 # Turn off posix mode since it does not allow process substitution
 set +o posix
 CMD=()
 CMD+=("$RUNNER")
-CMD+=("-javaagent:/home/workflow/external-spark/jars/aspectjweaver-1.9.6.jar")
+CMD+=("-javaagent:${ASPECTJ_JAR_PATH}")
 CMD+=("-cp")
 CMD+=("$EXTERNAL_SPARK_CLASS_PATH")
 CMD=(${CMD[@]} "$@")

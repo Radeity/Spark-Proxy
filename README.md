@@ -38,19 +38,19 @@ mvn clean scala:compile compile package
 
 **Add Spark configuration to support aop:**
 
-1. Download `aspectjweaver-1.9.7.jar` from mvn repository
+1. Download `aspectjweaver-1.9.6.jar` from mvn repository
 
 2. Edit `$SPARK_HOME/conf/spark_env.sh` (Standalone Mode)
 
   ```shell
-  export SPARK_SUBMIT_OPTS="-javaagent:{DOWNLOAD_JAR_PATH}/aspectjweaver-1.9.7.jar"
+  export SPARK_SUBMIT_OPTS="-javaagent:{DOWNLOAD_JAR_PATH}/aspectjweaver-1.9.6.jar"
   ```
 
 3. Edit `$SPARK_HOME/conf/spark_default.conf` (Yarn Mode)
 
   ```shell
-  spark.executor.extraJavaOptions  "-javaagent:{DOWNLOAD_JAR_PATH}/aspectjweaver-1.9.7.jar"
-  spark.driver.extraJavaOptions    "-javaagent:{DOWNLOAD_JAR_PATH}/aspectjweaver-1.9.7.jar"
+  spark.executor.extraJavaOptions  "-javaagent:{DOWNLOAD_JAR_PATH}/aspectjweaver-1.9.6.jar"
+  spark.driver.extraJavaOptions    "-javaagent:{DOWNLOAD_JAR_PATH}/aspectjweaver-1.9.6.jar"
   ```
 
 4. Move aop jar to spark resource path:
@@ -79,6 +79,7 @@ mvn clean scala:compile compile package
   cp -r conf/ $EXTERNAL_SPARK_HOME/conf
   mv Dispatcher/target/Dispatcher-1.0-SNAPSHOT-jar-with-dependencies.jar $EXTERNAL_SPARK_HOME/jars
   mv Worker/target/Worker-1.0-SNAPSHOT-jar-with-dependencies.jar $EXTERNAL_SPARK_HOME/jars
+  mv {DOWNLOAD_JAR_PATH}/aspectjweaver-1.9.6.jar $EXTERNAL_SPARK_HOME/jars
   ```
 Directory tree will be:
 
