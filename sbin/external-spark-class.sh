@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 
-EXTERNAL_SPARK_CONF_DIR="${EXTERNAL_SPARK_CONF_DIR:-"${EXTERNAL_SPARK_HOME}/conf"}"
 
-EXTERNAL_SPARK_JAR_DIR="${EXTERNAL_SPARK_JAR_DIR:-"${EXTERNAL_SPARK_HOME}/jars"}"
-
-EXTERNAL_SPARK_CLASS_PATH=${EXTERNAL_SPARK_CONF_DIR}:${EXTERNAL_SPARK_JAR_DIR}/*
+JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
 
 # Find the java binary
 if [ -n "${JAVA_HOME}" ]; then
@@ -14,15 +11,32 @@ else
   exit 1
 fi
 
-ASPECTJ_JAR_PATH="${EXTERNAL_SPARK_HOME}/jars/aspectjweaver-1.9.6.jar"
+command=$1
+shift
+
+case ${command} in
+  (org.apache.spark.java.dispatcher.Dispatcher)
+    EXTERNAL_SPARK_JAR_DIR="${EXTERNAL_SPARK_DISPATCHER_JAR_DIR:-"${EXTERNAL_SPARK_HOME}/dispatcher-jars"}"
+    JAVA_AGENT_CONF="-javaagent:${EXTERNAL_SPARK_JAR_DIR}/aspectjweaver-1.9.6.jar"
+    ;;
+  (org.apache.spark.worker.Worker)
+    EXTERNAL_SPARK_JAR_DIR="${EXTERNAL_SPARK_WORKER_JAR_DIR:-"${EXTERNAL_SPARK_HOME}/worker-jars"}"
+    ;;
+esac
+
+EXTERNAL_SPARK_CONF_DIR="${EXTERNAL_SPARK_CONF_DIR:-"${EXTERNAL_SPARK_HOME}/conf"}"
+
+EXTERNAL_SPARK_CLASS_PATH=${EXTERNAL_SPARK_CONF_DIR}:${EXTERNAL_SPARK_JAR_DIR}/*
+
 
 # Turn off posix mode since it does not allow process substitution
 set +o posix
 CMD=()
 CMD+=("$RUNNER")
-CMD+=("-javaagent:${ASPECTJ_JAR_PATH}")
+CMD+=("${JAVA_AGENT_CONF}")
 CMD+=("-cp")
 CMD+=("$EXTERNAL_SPARK_CLASS_PATH")
+CMD+=("${command}")
 CMD=(${CMD[@]} "$@")
 COUNT=${#CMD[@]}
 

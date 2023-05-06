@@ -15,7 +15,6 @@ import static fdu.daslab.constants.Constants.driverURLPrefix;
  * @version 1.0
  * @date 23/4/28 7:44 PM
  */
-// TODO: only effective for Dispatcher, have to change launch script or separate Worker and Dispatcher jars path
 @Aspect
 public class ReceiverAspect {
 

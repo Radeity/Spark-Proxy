@@ -4,10 +4,12 @@
 #
 # Environment Variables
 #
-#   EXTERNAL_SPARK_HOME           The HOME of external Spark.
-#   EXTERNAL_SPARK_CONF_DIR       Alternate conf dir. Default is ${EXTERNAL_SPARK_HOME}/conf.
-#   EXTERNAL_SPARK_PID_DIR        The pid files are stored. /tmp by default.
-#   EXTERNAL_SPARK_LOG_MAX_FILES  Max log files of external Spark daemons can rotate to. Default is 5.
+#   EXTERNAL_SPARK_HOME                 The HOME of external Spark.
+#   EXTERNAL_SPARK_CONF_DIR             Alternate conf dir. Default is ${EXTERNAL_SPARK_HOME}/conf.
+#   EXTERNAL_SPARK_PID_DIR              The pid files are stored. /tmp by default.
+#   EXTERNAL_SPARK_LOG_MAX_FILES        Max log files of external Spark daemons can rotate to. Default is 5.
+#   EXTERNAL_SPARK_DISPATCHER_JAR_DIR   Dispatcher jar path. Default is ${EXTERNAL_SPARK_HOME}/dispatcher-jars.
+#   EXTERNAL_SPARK_WORKER_JAR_DIR       Worker jar path. Default is ${EXTERNAL_SPARK_HOME}/worker-jars.
 ##
 
 

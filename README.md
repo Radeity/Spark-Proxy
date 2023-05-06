@@ -84,13 +84,12 @@ mvn clean scala:compile compile package
 Directory tree will be:
 
   ```text
-  |-- conf
+|-- conf
 |   |-- common.properties
-|   `-- hosts.template
-|-- jars
-|   |-- common-1.0-SNAPSHOT.jar
-|   |-- Dispatcher-1.0-SNAPSHOT-jar-with-dependencies.jar
-|   `-- Worker-1.0-SNAPSHOT-jar-with-dependencies.jar
+|   `-- hosts
+|-- dispatcher-jars
+|   |-- aspectjweaver-1.9.6.jar
+|   `-- Dispatcher-1.0-SNAPSHOT-jar-with-dependencies.jar
 |-- sbin
 |   |-- external-spark-class.sh
 |   |-- external-spark-daemon.sh
@@ -100,11 +99,13 @@ Directory tree will be:
 |   |-- stop-all.sh
 |   |-- stop-dispatcher.sh
 |   `-- stop-worker.sh
-`-- tmp
-    |-- external-spark-user-org.apache.spark.java.dispatcher.Dispatcher.log
-    |-- external-spark-user-org.apache.spark.java.dispatcher.Dispatcher.pid
-    |-- external-spark-user-org.apache.spark.worker.Worker.log
-    `-- external-spark-user-org.apache.spark.worker.Worker.pid
+|-- tmp
+|   |-- external-spark-workflow-org.apache.spark.java.dispatcher.Dispatcher.log
+|   |-- external-spark-workflow-org.apache.spark.java.dispatcher.Dispatcher.pid
+|   |-- external-spark-workflow-org.apache.spark.worker.Worker.log
+|   `-- external-spark-workflow-org.apache.spark.worker.Worker.pid
+`-- worker-jars
+    `-- Worker-1.0-SNAPSHOT-jar-with-dependencies.jar
   ```
 
 <br>
@@ -126,6 +127,8 @@ Directory tree will be:
 |EXTERNAL_SPARK_CONF_DIR|Alternate conf dir. Default is ${EXTERNAL_SPARK_HOME}/conf.|
 |EXTERNAL_SPARK_PID_DIR|The pid files are stored. Default is ${EXTERNAL_SPARK_HOME}/tmp.|
 |EXTERNAL_SPARK_LOG_MAX_FILES|Max log files of external Spark daemons can rotate to. Default is 5.|
+|EXTERNAL_SPARK_DISPATCHER_JAR_DIR|Dispatcher jar path. Default is ${EXTERNAL_SPARK_HOME}/dispatcher-jars.|
+|EXTERNAL_SPARK_WORKER_JAR_DIR|Worker jar path. Default is ${EXTERNAL_SPARK_HOME}/worker-jars.|
 <br>
 
 **Host File (conf/hosts)**
