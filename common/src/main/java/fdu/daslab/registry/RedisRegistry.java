@@ -15,13 +15,15 @@ import static fdu.daslab.constants.Constants.COMMON_PROPERTIES_PATH;
  */
 public class RedisRegistry {
 
-    public static Jedis jedis;
+    public static volatile Jedis jedis;
 
-    public static synchronized Jedis getRedisClientInstance() {
+    public static Jedis getRedisClientInstance() {
         if (jedis == null) {
-            jedis = new Jedis(PropertyUtils.getValue(REDIS_HOST, COMMON_PROPERTIES_PATH), 6379);
-            jedis.auth(PropertyUtils.getValue(REDIS_PASSWORD, COMMON_PROPERTIES_PATH));
-            jedis.ping();
+            synchronized (Jedis.class) {
+                jedis = new Jedis(PropertyUtils.getValue(REDIS_HOST, COMMON_PROPERTIES_PATH), 6379);
+                jedis.auth(PropertyUtils.getValue(REDIS_PASSWORD, COMMON_PROPERTIES_PATH));
+                jedis.ping();
+            }
         }
         return jedis;
     }
