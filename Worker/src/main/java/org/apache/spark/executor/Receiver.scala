@@ -3,7 +3,7 @@ package org.apache.spark.executor
 import org.apache.spark.message.ExtraMessages.{LaunchRemoteTask, RetrieveApplicationContext}
 import org.apache.spark.scheduler.TaskDescription
 import org.apache.spark.util.SerializableBuffer
-import org.apache.spark.worker.WorkerConstants.{DEFAULT_EXECUTOR_ID, bindAddress}
+import org.apache.spark.worker.WorkerConstants.bindAddress
 import org.apache.spark.worker.WorkerEndPoint
 import org.apache.spark.{ExternalApplicationContext, SparkEnv}
 
@@ -43,7 +43,7 @@ class Receiver(workerEndPoint: WorkerEndPoint) {
         workerEndPoint.conf = externalApplicationContext.getConf
         val executorEnv = SparkEnv.createExecutorEnv(
           workerEndPoint.conf,
-          DEFAULT_EXECUTOR_ID,
+          workerEndPoint.executorId,
           bindAddress,
           bindAddress,
           1,
@@ -57,7 +57,7 @@ class Receiver(workerEndPoint: WorkerEndPoint) {
       val newByteBuffer: ByteBuffer = data.value.duplicate
       val taskDescription: TaskDescription = TaskDescription.decode(newByteBuffer)
       println("External Worker receive task: " + taskDescription.taskId)
-      val tr = new TaskRunner(workerEndPoint.driver, workerEndPoint.conf, taskDescription)
+      val tr = new TaskRunner(workerEndPoint.driver, workerEndPoint.conf, taskDescription, workerEndPoint.executorId)
       tr.run()
 
   }

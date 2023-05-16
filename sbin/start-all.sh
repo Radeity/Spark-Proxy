@@ -23,9 +23,11 @@ fi
 # sleep 3 seconds to make sure that dispatcher is ready, which can reduce `Worker` waiting time
 sleep 3s
 
+executorId=17
 for host in `echo "$HOST_LIST" |  grep '\[worker\]' | awk '{print $NF}'`
 do
-  ssh -o StrictHostKeyChecking=no "$host" "${EXTERNAL_SPARK_HOME}/sbin/start-worker.sh $dispatcher"
+  ssh -o StrictHostKeyChecking=no "$host" "${EXTERNAL_SPARK_HOME}/sbin/start-worker.sh $dispatcher $executorId"
+  executorId=`expr $executorId + 1`;
 done
 
 wait

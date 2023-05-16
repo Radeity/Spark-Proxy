@@ -7,7 +7,6 @@ import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages.StatusUpd
 import org.apache.spark.scheduler.{DirectTaskResult, Task, TaskDescription}
 import org.apache.spark.serializer.{JavaSerializationStream, SerializerInstance}
 import org.apache.spark.util.{ByteBufferOutputStream, MutableURLClassLoader}
-import org.apache.spark.worker.WorkerConstants.DEFAULT_EXECUTOR_ID
 import org.apache.spark.{SparkConf, SparkEnv, TaskState}
 
 import java.io.File
@@ -23,7 +22,7 @@ import scala.collection.mutable.ArrayBuffer
  * @date 2022/12/12 8:16 PM
  * @version 1.0
  */
-class TaskRunner(driver: RpcEndpointRef, conf: SparkConf, taskDescription: TaskDescription) extends Runnable {
+class TaskRunner(driver: RpcEndpointRef, conf: SparkConf, taskDescription: TaskDescription, executorId: String) extends Runnable {
 
   override def run(): Unit = {
 
@@ -46,7 +45,7 @@ class TaskRunner(driver: RpcEndpointRef, conf: SparkConf, taskDescription: TaskD
         val taskMemoryManager = new TaskMemoryManager(SparkEnv.get.memoryManager, taskDescription.taskId)
         task.setTaskMemoryManager(taskMemoryManager)
         task.localProperties = new Properties()
-        task.localProperties.setProperty("spark.sql.execution.id", DEFAULT_EXECUTOR_ID)
+        task.localProperties.setProperty("spark.sql.execution.id", executorId)
         val value: Any = task.run(
           taskAttemptId = taskDescription.taskId,
           attemptNumber = taskDescription.attemptNumber,

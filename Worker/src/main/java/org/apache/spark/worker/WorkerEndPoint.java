@@ -45,10 +45,13 @@ public class WorkerEndPoint implements IsolatedRpcEndpoint {
 
     public java.util.HashSet<String> runningApplication;
 
-    public WorkerEndPoint(RpcEnv rpcEnv, SparkConf conf, String dispatcherHost) {
+    public String executorId;
+
+    public WorkerEndPoint(RpcEnv rpcEnv, SparkConf conf, String dispatcherHost, String executorId) {
         this.rpcEnv = rpcEnv;
         this.conf = conf;
         this.runningApplication = new java.util.HashSet<>();
+        this.executorId = executorId;
         this.dispatcherURL = String.format("%s%s:%s",
                 dispatcherURLPrefix, dispatcherHost, PropertyUtils.getValue(DISPATCHER_PORT, COMMON_PROPERTIES_PATH));
     }
@@ -77,7 +80,7 @@ public class WorkerEndPoint implements IsolatedRpcEndpoint {
 
         Map<String, String> emptyMap = new HashMap<>();
         Map<String, ResourceInformation> emptyResourceInformationMap = new HashMap<>();
-        dispatcher.ask(new RegisterExecutor(WorkerConstants.DEFAULT_EXECUTOR_ID, self(), WorkerConstants.bindAddress, 1, emptyMap, emptyMap, emptyResourceInformationMap, 0), ClassTag$.MODULE$.apply(Boolean.class));
+        dispatcher.ask(new RegisterExecutor(executorId, self(), WorkerConstants.bindAddress, 1, emptyMap, emptyMap, emptyResourceInformationMap, 0), ClassTag$.MODULE$.apply(Boolean.class));
 
         logger.info("Successfully connect to Dispatcher {}", dispatcher.address());
 
