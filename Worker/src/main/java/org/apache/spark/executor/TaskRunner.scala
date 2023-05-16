@@ -8,6 +8,7 @@ import org.apache.spark.scheduler.{DirectTaskResult, Task, TaskDescription}
 import org.apache.spark.serializer.{JavaSerializationStream, SerializerInstance}
 import org.apache.spark.util.{ByteBufferOutputStream, MutableURLClassLoader}
 import org.apache.spark.{SparkConf, SparkEnv, TaskState}
+import org.apache.spark.worker.WorkerConstants.EXTERNAL_APPLICATION_JAR_DIR
 
 import java.io.File
 import java.net.URL
@@ -80,7 +81,8 @@ class TaskRunner(driver: RpcEndpointRef, conf: SparkConf, taskDescription: TaskD
 
   def getSparkClassLoader(): Array[URL] = {
     // add example jars to external classpath for deserializing Task
-    val jarDir = new File("/home/workflow/software/spark/spark-3.1.2-bin-hadoop3.2/examples/jars")
+    val externalJarPath = System.getenv(EXTERNAL_APPLICATION_JAR_DIR)
+    val jarDir = new File(externalJarPath)
     val jars = jarDir.listFiles()
     val userClassPath: ArrayBuffer[URL] = ArrayBuffer()
     jars.foreach(jar => userClassPath.append(new URL("file://" + jar.getAbsolutePath)))

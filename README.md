@@ -129,6 +129,7 @@ Directory tree will be:
 |EXTERNAL_SPARK_LOG_MAX_FILES|Max log files of external Spark daemons can rotate to. Default is 5.|
 |EXTERNAL_SPARK_DISPATCHER_JAR_DIR|Dispatcher jar path. Default is ${EXTERNAL_SPARK_HOME}/dispatcher-jars.|
 |EXTERNAL_SPARK_WORKER_JAR_DIR|Worker jar path. Default is ${EXTERNAL_SPARK_HOME}/worker-jars.|
+|EXTERNAL_APPLICATION_JAR_DIR|Application jar path, for loading running application jar. Default is null.|
 <br>
 
 **Host File (conf/hosts)**
